@@ -1,0 +1,23 @@
+{
+  "name": "wrikka-learn2",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "biome lint --write"
+  },
+  "dependencies": {
+    "nuxt": "^4.2.0",
+    "vue": "^3.5.22"
+  },
+  "devDependencies": {
+    "@unocss/vite": "^66.5.4",
+    "unocss": "^66.5.4",
+    "vite-plugin-checker": "^0.11.0",
+    "vue-tsc": "^3.1.2"
+  }
+}

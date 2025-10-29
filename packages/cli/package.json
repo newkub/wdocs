@@ -1,0 +1,16 @@
+{
+  "name": "@wrikka/cli",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "type": "module",
+  "bin": {
+    "wrikka": "src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "build": "tsdown --exports --dts"
+  },
+  "dependencies": {
+    "@clack/prompts": "latest"
+  }
+}

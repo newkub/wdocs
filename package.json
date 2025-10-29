@@ -13,6 +13,10 @@
     "clean": "bunx rimraf dist node_modules .turbo",
     "update:deps": "bunx taze -r -w",
     "check:unused": "bunx knip",
-    "release": "bunx release-it"
+    "release": "bunx release-it",
+    "review": "bun update:deps && bun lint && bun build"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.8"
   }
 }

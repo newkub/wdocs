@@ -1,20 +1,21 @@
 {
-  "name": "wrikka-learn2",
+  "name": "wdocs",
   "type": "module",
-  "private": true,
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "lint": "biome lint --write"
+    "lint": "biome lint --write",
+    "review": "bun update:deps && bun lint && bun build"
   },
   "dependencies": {
     "nuxt": "^4.2.0",
     "vue": "^3.5.22"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.2",
     "@unocss/nuxt": "^66.5.4",
     "@unocss/vite": "^66.5.4",
     "unocss": "^66.5.4",

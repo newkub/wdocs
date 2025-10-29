@@ -1,17 +1,30 @@
-import { AI } from './ai'
+import * as clack from '@clack/prompts';
 
 export function writeAIMode(content: string): string {
-  // เรียกใช้ AI เพื่อประมวลผล content
-  const aiResponse = AI.process(content)
-  
-  // ส่งคืนผลลัพธ์
-  return `AI Processed: ${aiResponse}`
+  // ส่งคืนผลลัพธ์แบบง่าย
+  return `AI Processed: ${content}`
 }
 
-// ฟังก์ชันหลักสำหรับการเขียน
-export function write(content: string, mode: 'normal' | 'ai' = 'normal'): string {
+export async function write(content?: string, mode: 'normal' | 'ai' = 'normal'): Promise<string> {
   if (mode === 'ai') {
+    if (!content) {
+      throw new Error('Content is required for AI mode');
+    }
     return writeAIMode(content)
+  }
+  
+  if (!content) {
+    const input = await clack.text({
+      message: 'What do you want to write?',
+      placeholder: 'Enter your content here',
+    });
+    
+    if (clack.isCancel(input)) {
+      clack.cancel('Operation cancelled');
+      return '';
+    }
+    
+    content = input;
   }
   
   // โหมดปกติ

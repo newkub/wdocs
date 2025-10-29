@@ -14,7 +14,7 @@ export async function newProject() {
   
   if (clack.isCancel(project)) {
     clack.cancel('Operation cancelled');
-    process.exit(0);
+    return;
   }
 
   const projectType = await clack.select({
@@ -28,7 +28,7 @@ export async function newProject() {
 
   if (clack.isCancel(projectType)) {
     clack.cancel('Operation cancelled');
-    process.exit(0);
+    return;
   }
 
   const confirm = await clack.confirm({
@@ -37,15 +37,16 @@ export async function newProject() {
 
   if (!confirm || clack.isCancel(confirm)) {
     clack.cancel('Operation cancelled');
-    process.exit(0);
+    return;
   }
 
-  clack.spinner.start('Creating project...');
+  const spinner = clack.spinner();
+  spinner.start('Creating project...');
   // Simulate project creation
   await new Promise(resolve => setTimeout(resolve, 2000));
-  clack.spinner.stop('Project created!');
+  spinner.stop('Project created!');
 
-  clack.outro('🎉 Project ready! Next steps:\n  cd ' + project + '\n  bun install\n  bun run dev');
+  clack.outro(`🎉 Project ready! Next steps:\n  cd ${String(project)}\n  bun install\n  bun run dev`);
 
   return { project, projectType };
 }

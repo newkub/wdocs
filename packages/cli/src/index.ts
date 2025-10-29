@@ -1,6 +1,5 @@
-#!/usr/bin/env node
 import { newProject } from './cli/new';
-import { editMarkdown } from './cli/ai';
+import { write } from './cli/write';
 import * as clack from '@clack/prompts';
 
 async function main() {
@@ -8,7 +7,7 @@ async function main() {
     message: 'Select command',
     options: [
       { value: 'new', label: 'Create new project' },
-      { value: 'ai', label: 'AI Markdown Editor' },
+      { value: 'write', label: 'Write Markdown Editor' },
     ],
   });
 
@@ -20,8 +19,11 @@ async function main() {
   switch (command) {
     case 'new':
       return await newProject();
-    case 'ai':
-      return await editMarkdown();
+    case 'write':
+      const input = process.argv[2];
+      const result = await write(input);
+      console.log(result);
+      break;
     default:
       clack.cancel('Invalid command');
       process.exit(1);

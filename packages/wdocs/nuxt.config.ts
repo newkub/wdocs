@@ -1,8 +1,12 @@
+import type { PluginOption } from 'vite'
 import checker from 'vite-plugin-checker'
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+  nitro: {
+    preset: 'cloudflare'
+  },
   modules: [
     '@unocss/nuxt',
   ],
@@ -17,7 +21,7 @@ export default defineNuxtConfig({
         biome: {
           command: "lint",
         },
-      })
+      }) as PluginOption
     ]
   }
 })

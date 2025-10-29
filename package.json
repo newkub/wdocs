@@ -1,26 +1,18 @@
 {
   "name": "wrikka-learn",
-  "private": true,
   "packageManager": "bun@1.3.1",
   "workspaces": [
     "examples/*",
     "packages/*"
   ],
   "scripts": {
+    "prepare": "bunx lefthook install",
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
-    "clean": "turbo run clean",
-    "update:deps": "taze -r -w",
-    "check:unused": "knip",
-    "release": "release-it",
-    "postinstall": "lefthook install"
-  },
-  "devDependencies": {
-    "knip": "latest",
-    "lefthook": "latest",
-    "release-it": "latest",
-    "taze": "latest",
-    "turbo": "latest"
+    "clean": "bunx rimraf dist node_modules .turbo",
+    "update:deps": "bunx taze -r -w",
+    "check:unused": "bunx knip",
+    "release": "bunx release-it"
   }
 }

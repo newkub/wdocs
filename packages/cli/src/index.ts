@@ -1,33 +1,30 @@
-import { newProject } from './cli/new';
-import { write } from './cli/write';
-import * as clack from '@clack/prompts';
+import { Effect } from "effect";
+import { newCommand, writeCommand } from "./app";
+import { cac } from "./lib/cac.lib";
+import { clack } from "./lib/clack.lib";
 
-async function main() {
-  const command = await clack.select({
-    message: 'Select command',
-    options: [
-      { value: 'new', label: 'Create new project' },
-      { value: 'write', label: 'Write Markdown Editor' },
-    ],
-  });
+const cli = cac("wrikka");
 
-  if (clack.isCancel(command)) {
-    clack.cancel('Operation cancelled');
-    process.exit(0);
-  }
+cli.command("new", "Create a new project").action(() => {
+	Effect.runPromise(newCommand).catch(console.error);
+});
 
-  switch (command) {
-    case 'new':
-      return await newProject();
-    case 'write':
-      const input = process.argv[2];
-      const result = await write(input);
-      console.log(result);
-      break;
-    default:
-      clack.cancel('Invalid command');
-      process.exit(1);
-  }
+cli
+	.command("write [content]", "Write something")
+	.option("--ai", "Use AI mode")
+	.action((content, options) => {
+		const mode = options.ai ? "ai" : "normal";
+		Effect.runPromise(writeCommand(content, mode)).catch(console.error);
+	});
+
+cli.help();
+cli.version("0.1.0");
+
+try {
+	cli.parse();
+} catch (e) {
+	if (e instanceof Error) {
+		clack.log.error(e.message);
+	}
+	process.exit(1);
 }
-
-main().catch(console.error);

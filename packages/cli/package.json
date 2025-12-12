@@ -1,26 +1,43 @@
 {
-  "name": "@wrikka/cli",
-  "version": "0.1.0",
-  "main": "./dist/index.js",
-  "type": "module",
-  "bin": {
-    "wrikka": "src/index.ts"
-  },
-  "scripts": {
-    "dev": "bun --watch src/index.ts",
-    "build": "tsdown --exports --dts"
-  },
-  "dependencies": {
-    "@clack/prompts": "latest"
-  },
-  "devDependencies": {
-    "@types/node": "^24.9.2",
-    "tsdown": "^0.15.12"
-  },
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": "./dist/index.js",
-    "./package.json": "./package.json"
-  }
+	"name": "@wrikka/cli",
+	"version": "0.1.0",
+	"main": "./dist/index.mjs",
+	"type": "module",
+	"bin": {
+		"wrikka": "src/index.ts"
+	},
+	"scripts": {
+		"dev": "bun --watch src/index.ts",
+		"build": "tsdown --exports --dts",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:ui": "vitest --ui",
+		"test:coverage": "vitest run --coverage",
+		"format": "dprint fmt",
+		"lint": "oxlint --fix",
+		"lint:ts": "tsgolint"
+	},
+	"dependencies": {
+		"@clack/prompts": "latest",
+		"@effect/schema": "^0.75.5",
+		"c12": "^3.3.2",
+		"cac": "^6.7.14",
+		"effect": "^3.19.11",
+		"remeda": "^2.32.0"
+	},
+	"devDependencies": {
+		"@types/node": "25.0.1",
+		"@vitest/coverage-v8": "^4.0.15",
+		"dprint": "^0.50.2",
+		"oxlint": "^1.32.0",
+		"oxlint-tsgolint": "^0.8.6",
+		"tsdown": "^0.17.3",
+		"vitest": "^4.0.15"
+	},
+	"module": "./dist/index.mjs",
+	"types": "./dist/index.d.mts",
+	"exports": {
+		".": "./dist/index.mjs",
+		"./package.json": "./package.json"
+	}
 }

@@ -7,7 +7,7 @@
 		"generate": "nuxt generate",
 		"preview": "nuxt preview",
 		"postinstall": "nuxt prepare",
-		"lint": "bunx vue-tsc --noEmit && bunx oxlint --fix",
+		"lint": "nuxt typecheck && bunx oxlint --fix",
 		"format": "dprint fmt",
 		"review": "bun run update:deps && bun run format && bun run lint && bun run build",
 		"update:deps": "bunx taze -r"

@@ -9,9 +9,7 @@
 		"vitest",
 		"jsx-a11y",
         "nextjs",
-        "import",
 		"promise",
-		"vitest",
 		"typescript",
 		"vue",
 		"node"

@@ -1,3 +1,5 @@
+import checker from "vite-plugin-checker";
+
 export default defineNuxtConfig({
 	compatibilityDate: "2025-05-15",
 	devtools: { enabled: true },
@@ -27,16 +29,20 @@ export default defineNuxtConfig({
 	},
 
 	typescript: {
-		typeCheck: false,
+		typeCheck: true,
 		strict: true,
 	},
 
-	app: {
-		layoutTransition: { name: "layout", mode: "out-in" },
+	vite: {
+		plugins: [
+			checker({
+				overlay: {
+					initialIsOpen: false,
+				},
+				typescript: true,
+				vueTsc: true,
+				oxlint: true,
+			}),
+		],
 	},
-
-	plugins: [
-		"~/plugins/init.ts",
-		"~/plugins/analytics.client.ts",
-	],
 });

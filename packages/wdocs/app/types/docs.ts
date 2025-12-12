@@ -8,3 +8,8 @@ export interface SearchResult {
 	path: string;
 	title: string;
 }
+
+export interface Doc {
+	title: string;
+	content: string;
+}

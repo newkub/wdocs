@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useDocsNavigation } from "~/composables/useDocs";
+import { useDocsNavigation } from "~/composables/docs";
 
 const { data: navigation } = useDocsNavigation();
 </script>

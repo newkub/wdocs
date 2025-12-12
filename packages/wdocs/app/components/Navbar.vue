@@ -1,35 +1,14 @@
 <script setup lang="ts">
-import { useDebounceFn } from "@vueuse/core";
-import { ref, watch } from "vue";
-import type { SearchResult } from "~/types/docs";
+import { useDocSearch } from "~/composables/docs";
 
-const searchQuery = ref("");
-const searchResults = ref<SearchResult[]>([]);
-const isSearchOpen = ref(false);
+const { searchQuery, searchResults, isSearchOpen, closeSearch } =
+	useDocSearch();
 
-const search = async () => {
-	if (searchQuery.value.length < 2) {
-		searchResults.value = [];
-		isSearchOpen.value = false;
-		return;
-	}
-
-	const { data } = await useFetch<SearchResult[]>("/api/docs/search", {
-		params: { q: searchQuery.value },
-	});
-
-	if (data.value) {
-		searchResults.value = data.value;
-		isSearchOpen.value = true;
-	}
-};
-
-const debouncedSearch = useDebounceFn(search, 300);
-
-watch(searchQuery, debouncedSearch);
-
-const closeSearch = () => {
-	isSearchOpen.value = false;
+const handleBlur = () => {
+	// Delay closing to allow click event on search results
+	setTimeout(() => {
+		closeSearch();
+	}, 200);
 };
 </script>
 
@@ -44,12 +23,13 @@ const closeSearch = () => {
 					>Wrikka Docs</NuxtLink>
 				</div>
 				<div class="flex items-center space-x-4">
-					<div class="relative" v-on-click-outside="closeSearch">
+					<div class="relative">
 						<input
 							v-model="searchQuery"
 							type="text"
 							placeholder="Search docs..."
 							class="input w-64"
+							@blur="handleBlur"
 						/>
 						<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
 							<i class="i-mdi-magnify text-gray-400"></i>

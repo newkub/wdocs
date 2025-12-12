@@ -12,6 +12,12 @@
     "lint": {
       "outputs": []
     },
+    "format": {
+      "outputs": []
+    },
+    "test": {
+      "outputs": []
+    },
     "clean": {
       "dependsOn": [],
       "outputs": []

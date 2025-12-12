@@ -14,10 +14,10 @@ const toggleMode = () => {
 		<ColorScheme placeholder="..." tag="span">
 			<Icon
 				v-if="colorMode.value === 'dark'"
-				name="heroicons-outline:moon"
+				name="mdi:weather-night"
 				class="w-6 h-6"
 			/>
-			<Icon v-else name="heroicons-outline:sun" class="w-6 h-6" />
+			<Icon v-else name="mdi:white-balance-sunny" class="w-6 h-6" />
 		</ColorScheme>
 	</button>
 </template>

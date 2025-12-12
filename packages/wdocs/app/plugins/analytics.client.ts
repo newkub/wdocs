@@ -1,3 +1,3 @@
 export default defineNuxtPlugin(() => {
-  // Analytics integration placeholder
-})
+	// Analytics integration placeholder
+});

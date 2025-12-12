@@ -1,12 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Effect } from "effect";
 import * as clack from "@clack/prompts";
+import { Effect } from "effect";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { promptForContent } from "./prompt.service";
 
 vi.mock("@clack/prompts", () => ({
-    text: vi.fn(),
-    isCancel: vi.fn(),
-    cancel: vi.fn(),
+	text: vi.fn(),
+	isCancel: vi.fn(),
+	cancel: vi.fn(),
 }));
 
 describe("Write component", () => {

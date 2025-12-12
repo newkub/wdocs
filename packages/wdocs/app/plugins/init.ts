@@ -1,3 +1,3 @@
 export default defineNuxtPlugin(() => {
-  console.log('Wdocs initialized!')
-})
+	console.log("Wdocs initialized!");
+});

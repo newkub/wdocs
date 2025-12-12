@@ -1,8 +1,8 @@
 import { Console, Effect } from "effect";
-import { promptForContent } from "./services/prompt.service";
-import { promptForProjectDetails } from "./services/projectPrompt.service";
 import { clack } from "./lib/clack.lib";
 import { createProject } from "./services/project.service";
+import { promptForProjectDetails } from "./services/projectPrompt.service";
+import { promptForContent } from "./services/prompt.service";
 import { writeToFile } from "./services/write.service";
 
 export const newCommand = Effect.gen(function*() {

@@ -1,18 +1,18 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Effect } from "effect";
 import * as clack from "@clack/prompts";
+import { Effect } from "effect";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { promptForProjectDetails } from "./projectPrompt.service";
 
 vi.mock("@clack/prompts", () => ({
-    intro: vi.fn(),
-    outro: vi.fn(),
-    text: vi.fn(),
-    select: vi.fn(),
-    confirm: vi.fn(),
-    isCancel: vi.fn(),
-    cancel: vi.fn(),
-    spinner: vi.fn(() => ({ start: vi.fn(), stop: vi.fn() })),
-    log: {
+	intro: vi.fn(),
+	outro: vi.fn(),
+	text: vi.fn(),
+	select: vi.fn(),
+	confirm: vi.fn(),
+	isCancel: vi.fn(),
+	cancel: vi.fn(),
+	spinner: vi.fn(() => ({ start: vi.fn(), stop: vi.fn() })),
+	log: {
 		error: vi.fn(),
 	},
 }));

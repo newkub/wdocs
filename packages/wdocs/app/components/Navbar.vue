@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
-import type { SearchResult } from '../types/docs/search';
+import type { SearchResult } from '~/types/docs';
 
 const searchQuery = ref('');
 const searchResults = ref<SearchResult[]>([]);

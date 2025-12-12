@@ -17,7 +17,6 @@
     "review": "bun update:deps && bun lint && bun build"
   },
   "devDependencies": {
-    "turbo": "^2.5.8"
-  },
-  "version": "0.0.2"
+    "turbo": "^2.6.3"
+  }
 }

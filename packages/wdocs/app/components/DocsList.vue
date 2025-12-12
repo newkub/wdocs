@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import type { NavigationItem } from '../types/docs/navigation';
+import type { NavigationItem } from '~/types/docs';
 
 defineProps<{
 	navigation: NavigationItem[];

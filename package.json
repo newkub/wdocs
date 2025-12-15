@@ -10,7 +10,7 @@
   "scripts": {
     "prepare": "bunx lefthook install",
     "build": "turbo build",
-    "dev": "turbo dev",
+    "dev": "turbo dev --ui tui",
     "lint": "turbo lint",
     "format": "turbo format",
     "test": "turbo test",

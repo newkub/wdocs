@@ -1,39 +1,42 @@
 {
-	"name": "wdocs",
-	"type": "module",
-	"scripts": {
-		"build": "nuxt build",
-		"dev": "nuxt dev",
-		"generate": "nuxt generate",
-		"preview": "nuxt preview",
-		"postinstall": "nuxt prepare",
-		"lint": "nuxt typecheck && bunx oxlint --fix",
-		"format": "dprint fmt",
-		"review": "bun run update:deps && bun run format && bun run lint && bun run build",
-		"update:deps": "bunx taze -r"
-	},
-	"dependencies": {
-		"@nuxt/icon": "^2.1.0",
-		"@nuxtjs/color-mode": "^4.0.0",
-		"@pinia/nuxt": "^0.11.3",
-		"@vueuse/nuxt": "^14.1.0",
-		"vue": "^3.5.25",
-		"zod": "^4.1.13"
-	},
-	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20251212.0",
-		"@unocss/nuxt": "^66.5.10",
-		"@unocss/preset-typography": "^66.5.10",
-		"@unocss/reset": "^66.5.10",
-		"@vue-macros/nuxt": "^3.1.1",
-		"dprint": "^0.50.2",
-		"nuxt": "^4.2.2",
-		"nuxt-mcp-dev": "^0.3.1",
-		"oxlint": "^1.32.0",
-		"taze": "^19.9.2",
-		"typescript": "^5.9.3",
-		"unocss": "^66.5.10",
-		"vite-plugin-checker": "^0.12.0",
-		"vue-tsc": "^3.1.8"
-	}
+  "name": "wdocs",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/module.ts",
+  "bin": "./src/cli.ts",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "lint": "oxlint --fix",
+    "format": "oxlint --fix"
+  },
+
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@nuxt/kit": "^4.2.2",
+    "@nuxt/icon": "^2.1.1",
+    "@nuxtjs/color-mode": "^4.0.0",
+    "@pinia/nuxt": "^0.11.3",
+    "@shikijs/markdown-it": "^3.20.0",
+    "@shikijs/themes": "^3.20.0",
+    "@unocss/nuxt": "^66.5.10",
+    "@vue-macros/nuxt": "^3.1.1",
+    "@vueuse/nuxt": "^14.1.0",
+    "gray-matter": "^4.0.3",
+    "glob": "^^10.3.10",
+    "markdown-it": "^14.1.0",
+    "markdown-it-anchor": "^9.2.0",
+    "markdown-it-container": "^4.0.0",
+    "shiki": "^3.20.0",
+    "execa": "^9.1.0"
+  },
+  "devDependencies": {
+    "@types/markdown-it-anchor": "^",
+    "@types/node": "^25.0.2",
+    "nuxt": "^4.2.2",
+    "oxlint": "^1.33.0",
+    "typescript": "^5.9.3"
+  }
 }

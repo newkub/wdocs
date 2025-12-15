@@ -1,0 +1,16 @@
+{
+  "name": "docs",
+  "private": true,
+  "scripts": {
+    "build": "wdocs build",
+    "dev": "wdocs dev",
+    "generate": "wdocs generate",
+    "preview": "wdocs preview",
+    "lint": "oxlint --fix",
+    "format": "oxlint --fix"
+  },
+  "devDependencies": {
+    "wdocs": "workspace:*",
+    "oxlint": "^1.33.0"
+  }
+}

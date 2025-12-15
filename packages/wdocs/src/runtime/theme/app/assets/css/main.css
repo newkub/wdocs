@@ -1,0 +1,44 @@
+.custom-container {
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+  border-left-width: 4px;
+}
+
+.custom-container-title {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.custom-container.info {
+  background-color: #e6f7ff;
+  border-color: #91d5ff;
+  color: #0050b3;
+}
+
+.custom-container.warning {
+  background-color: #fffbe6;
+  border-color: #ffe58f;
+  color: #ad8b00;
+}
+
+.custom-container.danger {
+  background-color: #fff1f0;
+  border-color: #ffa39e;
+  color: #cf1322;
+}
+
+/* Shiki code block styles */
+.shiki {
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.dark .shiki {
+  background-color: #1a1a1a !important;
+}
+
+.light .shiki {
+  background-color: #f5f5f5 !important;
+}

@@ -1,32 +1,43 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "ui": "stream",
+  "globalDependencies": [
+    "tsconfig.json",
+    "bun.lockb"
+  ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^clean",
+        "^lint"
+      ],
       "outputs": [
-        ".output/**"
+        ".output/**",
+        "dist/**",
+        "target/release/**"
       ]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
-    "format": {
-      "outputs": []
-    },
+    "format": {},
+
     "lint": {
-      "outputs": []
+      "dependsOn": [
+        "^format"
+      ]
     },
     "test": {
-      "outputs": []
+      "dependsOn": [
+        "^build"
+      ]
     },
     "verify": {
-      "dependsOn": ["^verify"],
-      "outputs": []
+      "dependsOn": [
+        "^test"
+      ]
     },
-    "clean": {
-      "dependsOn": [],
-      "outputs": []
-    }
+    "clean": {}
   }
 }

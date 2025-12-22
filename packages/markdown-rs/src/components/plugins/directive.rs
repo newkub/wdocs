@@ -1,14 +1,15 @@
 use crate::components::plugins::Plugin;
+use crate::config::RenderFlags;
 use pulldown_cmark::{CowStr, Event, Tag, TagEnd};
 
 pub struct DirectivePlugin;
 
 impl Plugin for DirectivePlugin {
-    fn process<'a>(&self, input: &str, events: &mut Vec<Event<'a>>) -> bool {
-        if !input.contains("::") {
+    fn process<'a>(&self, flags: RenderFlags, events: &mut Vec<Event<'a>>) -> bool {
+        if !flags.directives {
             return false;
         }
-
+        
         let mut changed = false;
         let mut i = 0;
         while i < events.len() {

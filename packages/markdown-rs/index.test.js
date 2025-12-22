@@ -1,9 +1,9 @@
 import { test, expect } from "bun:test";
-import { render } from "./index.js";
+import { renderGfm, renderWithOptions } from "./index.js";
 
 test("renders basic markdown to html", () => {
 	const markdown = "# Hello, World!";
-	const html = render(markdown);
+	const html = renderGfm(markdown);
 	expect(html).toContain("<h1>Hello, World!</h1>");
 });
 
@@ -13,14 +13,14 @@ test("renders markdown with table to html", () => {
 | -------- | -------- |
 | Cell 1   | Cell 2   |
 `;
-	const html = render(markdown);
+	const html = renderGfm(markdown);
 	expect(html).toContain("<table>");
 	expect(html).toContain("<td>Cell 1</td>");
 });
 
 test("renders YouTube embed plugin", () => {
 	const markdown = "::youtube[dQw4w9WgXcQ]";
-	const html = render(markdown);
+	const html = renderGfm(markdown);
 	// Current behavior: renders as plain text
 	expect(html).toContain("::youtube[dQw4w9WgXcQ]");
 });
@@ -28,14 +28,42 @@ test("renders YouTube embed plugin", () => {
 test("renders Table of Contents (TOC) plugin", () => {
 	const markdown = `
 [toc]
-# First
 
-## Second
+# Title
+
+## Subtitle
+
+### Deeper Title
 `;
-	const html = render(markdown);
-	// Current behavior: renders [toc] as plain text
-	expect(html).toContain("[toc]");
-	// Check that headings are still rendered
-	expect(html).toContain("<h1>First</h1>");
-	expect(html).toContain("<h2>Second</h2>");
+	const html = renderWithOptions(markdown, { toc: true });
+	expect(html).toContain('<ul class="toc">');
+	expect(html).toContain('<li><a href="#subtitle">Subtitle</a></li>');
+});
+
+test("renders footnotes", () => {
+	const markdown = `
+Here is a footnote reference,[^1] and another.[^longnote].
+
+[^1]: Here is the footnote.
+
+[^longnote]: Here's one with multiple blocks.
+
+    Subsequent paragraphs are indented to show that they
+    belong to the previous footnote.
+`;
+	const html = renderWithOptions(markdown, { footnotes: true });
+	expect(html).toContain('<sup><a href="#1"');
+	expect(html).toContain("<div><sup>1</sup>");
+	expect(html).toContain("<p>Here is the footnote.</p>");
+});
+
+test("disables footnotes", () => {
+	const markdown = `
+Here is a footnote reference,[^1].
+
+[^1]: Here is the footnote.
+`;
+	const html = renderWithOptions(markdown, { footnotes: false });
+	expect(html).not.toContain('<sup class="footnote-ref">');
+	expect(html).not.toContain('<div class="footnote-definition" id="fn-1">');
 });

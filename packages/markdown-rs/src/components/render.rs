@@ -3,32 +3,45 @@ use std::fmt::Write;
 
 use pulldown_cmark::html;
 use crate::config::RenderFlags;
-use crate::lib_wrapper::parser::create_parser;
+use crate::adapters::pulldown_cmark::parser::create_parser;
+use v_htmlescape::escape;
 use crate::components::plugins::PluginManager;
 
 pub fn render_to_html_string(input: &str, flags: RenderFlags) -> String {
-    // Pre-allocate with a reasonable size based on input length
-    let estimated_size = input.len() + input.len() / 2;
-    let mut html_output = String::with_capacity(estimated_size);
-    
-    // Fast path: No plugins needed
-    if !flags.toc && !flags.directives && !flags.syntax_highlight {
-        let parser = create_parser(input, flags.gfm);
+    let mut html_output = String::with_capacity(input.len() * 2);
+    let parser = create_parser(input, flags);
+
+    // Fast path for when no plugins are enabled
+    if !flags.syntax_highlight && !flags.toc && !flags.directives {
         html::push_html(&mut html_output, parser);
         return html_output;
     }
-    
-    // Slower path: Apply plugins
-    let mut manager = PluginManager::default();
-    if flags.syntax_highlight {
-        manager = manager.with_syntax_highlighting();
+
+    // Slower path: process events as a stream
+    let mut transformed_events = parser;
+    // Note: The order of plugin application might matter.
+    // For now, we'll assume a fixed order.
+    // In the future, a more sophisticated plugin system could allow ordering.
+
+    // This approach is not yet implemented as plugins need to be adapted
+    // to work with iterators instead of a mutable Vec.
+    // For now, we keep the existing implementation but acknowledge its inefficiency.
+    let mut events: Vec<_> = transformed_events.collect();
+    let mut manager = PluginManager::new();
+
+    if flags.toc {
+        manager.add_plugin(Box::new(crate::components::plugins::toc::TocPlugin));
     }
-    
-    let parser = create_parser(input);
-    let mut events: Vec<_> = parser.collect();
-    manager.apply_plugins(input, &mut events);
+    if flags.directives {
+        manager.add_plugin(Box::new(crate::components::plugins::directive::DirectivePlugin));
+    }
+    if flags.syntax_highlight {
+        manager.add_plugin(Box::new(crate::components::plugins::syntax::SyntaxHighlightingPlugin));
+    }
+
+    manager.apply_plugins(flags, &mut events);
     html::push_html(&mut html_output, events.into_iter());
-    
+
     html_output
 }
 
@@ -59,11 +72,12 @@ fn render_ast_to_html_into(node: &Node, out: &mut String) {
             out.push_str("</p>");
         }
         NodeType::Heading(level) => {
-            write!(out, "<h{}>", level).unwrap();
-            for child in &node.children {
-                render_ast_to_html_into(child, out);
+            if write!(out, "<h{}>", level).is_ok() {
+                for child in &node.children {
+                    render_ast_to_html_into(child, out);
+                }
+                let _ = write!(out, "</h{}>", level);
             }
-            write!(out, "</h{}>", level).unwrap();
         }
         NodeType::Strong => {
             out.push_str("<strong>");
@@ -82,7 +96,7 @@ fn render_ast_to_html_into(node: &Node, out: &mut String) {
         NodeType::CodeBlock(lang) => {
             if let Some(content) = node.content.as_deref() {
                 if !lang.is_empty() {
-                    write!(out, "<pre><code class=\"language-{}\">", lang).unwrap();
+                    let _ = write!(out, "<pre><code class=\"language-{}\">", lang);
                 } else {
                     out.push_str("<pre><code>");
                 }
@@ -92,16 +106,7 @@ fn render_ast_to_html_into(node: &Node, out: &mut String) {
         }
         NodeType::Text => {
             if let Some(content) = node.content.as_deref() {
-                // Simple HTML escaping
-                for c in content.chars() {
-                    match c {
-                        '&' => out.push_str("&amp;"),
-                        '<' => out.push_str("&lt;"),
-                        '>' => out.push_str("&gt;"),
-                        '"' => out.push_str("&quot;"),
-                        _ => out.push(c),
-                    }
-                }
+                                let _ = write!(out, "{}", escape(content));
             }
         }
     }

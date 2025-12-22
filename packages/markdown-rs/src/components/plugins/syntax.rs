@@ -1,4 +1,5 @@
 use crate::components::plugins::Plugin;
+use crate::config::RenderFlags;
 use crate::constants::{SYNTAX_SET, THEME_SET};
 use pulldown_cmark::{CodeBlockKind, CowStr, Event, Tag, TagEnd};
 use std::collections::{HashMap, VecDeque};
@@ -101,11 +102,11 @@ pub(crate) fn highlight_code_block_html(language: &str, text: &str) -> Option<St
 }
 
 impl Plugin for SyntaxHighlightingPlugin {
-    fn process<'a>(&self, input: &str, events: &mut Vec<Event<'a>>) -> bool {
-        if !input.contains("```") {
+    fn process<'a>(&self, flags: RenderFlags, events: &mut Vec<Event<'a>>) -> bool {
+        if !flags.syntax_highlight {
             return false;
         }
-        let mut changed = false;
+                let mut changed = false;
         let mut in_code_block = false;
         let mut language: Option<CowStr<'a>> = None;
 

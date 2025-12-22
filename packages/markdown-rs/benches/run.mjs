@@ -1,11 +1,8 @@
-import benny from "benny";
+import { Bench } from "tinybench";
 import { readFileSync, writeFileSync } from "fs";
 import path from "path";
-import { spawn } from "child_process";
-import {
-	render as markdownRsRender,
-	renderFast as markdownRsRenderFast,
-} from "../index.js";
+import { execa } from "execa";
+import { renderGfm as markdownRsRender } from "../index.js";
 import { marked } from "marked";
 import MarkdownIt from "markdown-it";
 import { Remarkable } from "remarkable";
@@ -18,28 +15,28 @@ const RESULTS_FILE = path.resolve(BENCHES_DIR, "results.json");
 
 async function runJSBenchmarks() {
 	console.log("Running JavaScript benchmarks...");
+	const bench = new Bench({ time: 100 });
 	const mdIt = new MarkdownIt();
 	const remarkable = new Remarkable();
 	const showdownConverter = new showdown.Converter();
 	const sample = readFileSync(path.resolve(BENCHES_DIR, "sample.md"), "utf-8");
 
-	return new Promise((resolve) => {
-		benny.suite(
-			"JavaScript Markdown Parsers",
-			benny.add("markdown-rs", () => markdownRsRender(sample)),
-			benny.add("markdown-rs-fast", () => markdownRsRenderFast(sample)),
-			benny.add("marked", () => marked(sample)),
-			benny.add("markdown-it", () => mdIt.render(sample)),
-			benny.add("remarkable", () => remarkable.render(sample)),
-			benny.add("showdown", () => showdownConverter.makeHtml(sample)),
-			benny.add("pulldown-cmark-wasm", () => pulldownCmarkParse(sample)),
-			benny.add("comrak", () => comrakParse(sample)),
-			benny.cycle(),
-			benny.complete((summary) => {
-				resolve(summary.results);
-			}),
-		);
-	});
+	bench
+		.add("markdown-rs", () => markdownRsRender(sample))
+		.add("marked", () => marked(sample))
+		.add("markdown-it", () => mdIt.render(sample))
+		.add("remarkable", () => remarkable.render(sample))
+		.add("showdown", () => showdownConverter.makeHtml(sample))
+		.add("pulldown-cmark-wasm", () => pulldownCmarkParse(sample))
+		.add("comrak", () => comrakParse(sample));
+
+	await bench.run();
+
+	return bench.table().map((result) => ({
+		name: result.Task,
+		ops: parseFloat(result["ops/sec"]),
+		margin: parseFloat(result.Margin),
+	}));
 }
 
 async function runRustBenchmarks() {
@@ -49,64 +46,25 @@ async function runRustBenchmarks() {
 		"rust-hyperfine-results.json",
 	);
 	try {
-		// Diagnostic step to check if hyperfine can be spawned
-		await new Promise((resolve, reject) => {
-			console.log("Attempting to spawn hyperfine with --version...");
-			const testProc = spawn("bunx", ["hyperfine", "--version"], {
-				shell: true,
-				stdio: "inherit",
-			});
-			testProc.on("error", (err) =>
-				reject(new Error(`Failed to spawn hyperfine process: ${err.message}`)),
-			);
-			testProc.on("close", (code) => {
-				if (code === 0) {
-					console.log("Hyperfine version check successful.");
-					resolve();
-				} else {
-					reject(
-						new Error(`Hyperfine version check failed with exit code ${code}.`),
-					);
-				}
-			});
-		});
+		console.log("Checking hyperfine version...");
+		await execa("hyperfine", ["--version"], { stdio: "inherit" });
 
-		// If the above was successful, run the actual benchmark
 		console.log("Running main Rust benchmark command...");
-		await new Promise((resolve, reject) => {
-			const benchProc = spawn(
-				"bunx",
-				[
-					"hyperfine",
-					"--warmup",
-					"3",
-					"--export-json",
-					hyperfineOutput,
-					"cargo run --release --quiet --bench markdown_bench -- --bench",
-				],
-				{ shell: true, stdio: "inherit" },
-			);
-			benchProc.on("error", (err) =>
-				reject(new Error(`Failed to spawn benchmark process: ${err.message}`)),
-			);
-			benchProc.on("close", (code) => {
-				if (code === 0) {
-					resolve();
-				} else {
-					reject(new Error(`Benchmark process exited with code ${code}`));
-				}
-			});
-		});
+		await execa(
+			"hyperfine",
+			["--warmup", "3", "--export-json", hyperfineOutput, "bun run bench:rust"],
+			{ stdio: "inherit" },
+		);
 
 		const hyperfineData = JSON.parse(readFileSync(hyperfineOutput, "utf-8"));
 
 		return hyperfineData.results.map((result) => ({
-			name: result.command.split(" ")[5], // Extract benchmark name
+			name: result.command.split(" ")[2], // Adjusted for 'bun run bench:rust'
 			ops: 1 / result.mean,
 			margin: result.stddev,
 		}));
 	} catch (error) {
-		console.error("Failed to run Rust benchmarks:", error);
+		console.error("Failed to run Rust benchmarks:", error.message);
 		return [];
 	}
 }

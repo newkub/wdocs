@@ -21,3 +21,11 @@ impl SanitizerService for AmmoniaSanitizer {
         Ok(AMMONIA_BUILDER.clean(html).to_string())
     }
 }
+
+pub fn sanitize(html: String, should_sanitize: bool) -> String {
+    if !should_sanitize {
+        return html;
+    }
+    let sanitizer = AmmoniaSanitizer;
+    sanitizer.clean(&html).unwrap_or(html)
+}

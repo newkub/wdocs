@@ -8,6 +8,7 @@ pub struct RenderOptions {
     pub toc: Option<bool>,
     pub directives: Option<bool>,
     pub gfm: Option<bool>,
+    pub footnotes: Option<bool>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -17,16 +18,18 @@ pub struct RenderFlags {
     pub toc: bool,
     pub directives: bool,
     pub gfm: bool,
+    pub footnotes: bool,
 }
 
 impl Default for RenderFlags {
     fn default() -> Self {
         Self {
             sanitize: true,
-            syntax_highlight: true,
-            toc: true,
-            directives: true,
+            syntax_highlight: false, // Disabled by default
+            toc: false, // Disabled by default
+            directives: false, // Disabled by default
             gfm: true,
+            footnotes: false, // Disabled by default
         }
     }
 }
@@ -39,6 +42,7 @@ impl RenderFlags {
             toc: false,
             directives: false,
             gfm: false,
+            footnotes: false,
         }
     }
 
@@ -51,6 +55,7 @@ impl RenderFlags {
                 toc: o.toc.unwrap_or(default_flags.toc),
                 directives: o.directives.unwrap_or(default_flags.directives),
                 gfm: o.gfm.unwrap_or(default_flags.gfm),
+                footnotes: o.footnotes.unwrap_or(default_flags.footnotes),
             }
         } else {
             default_flags

@@ -1,11 +1,5 @@
-const {
-	parse,
-	render,
-	renderFast,
-	renderWithOptions,
-} = require("./markdown-rs.node");
+const { parse, renderGfm, renderWithOptions } = require("./markdown-rs.node");
 
 module.exports.parse = parse;
-module.exports.render = render;
-module.exports.renderFast = renderFast;
+module.exports.renderGfm = renderGfm;
 module.exports.renderWithOptions = renderWithOptions;

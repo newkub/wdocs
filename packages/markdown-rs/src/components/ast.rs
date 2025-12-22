@@ -7,6 +7,42 @@ use syntect::highlighting::Color;
 use syntect::util::LinesWithEndings;
 use v_htmlescape::escape;
 
+fn highlight_code(lang: &str, code: &str) -> String {
+    let syntax = SYNTAX_SET
+        .find_syntax_by_token(lang)
+        .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
+    let theme = &THEME_SET.themes["base16-ocean.dark"];
+    let bg = theme
+        .settings
+        .background
+        .unwrap_or(Color { r: 0, g: 0, b: 0, a: 0 });
+    let mut html = format!(
+        "<pre style=\"background-color:#{:02x}{:02x}{:02x};\">",
+        bg.r, bg.g, bg.b
+    );
+    let mut highlighter = HighlightLines::new(syntax, theme);
+
+    for line in LinesWithEndings::from(code) {
+        if let Ok(ranges) = highlighter.highlight_line(line, &SYNTAX_SET) {
+            for (style, text) in ranges.iter() {
+                let fg = style.foreground;
+                let _ = write!(
+                    &mut html,
+                    "<span style=\"color:#{:02x}{:02x}{:02x};\">{}</span>",
+                    fg.r,
+                    fg.g,
+                    fg.b,
+                    escape(text)
+                );
+            }
+        } else {
+            let _ = write!(&mut html, "{}", escape(line));
+        }
+    }
+    html.push_str("</pre>");
+    html
+}
+
 pub fn build_ast<'a>(parser: Parser<'a>, with_syntax_highlighting: bool) -> Node {
     let root = Node {
         r#type: NodeType::Document,
@@ -62,39 +98,7 @@ pub fn build_ast<'a>(parser: Parser<'a>, with_syntax_highlighting: bool) -> Node
 
                             if with_syntax_highlighting {
                                 if let NodeType::CodeBlock(lang) = &node.r#type {
-                                    let syntax = SYNTAX_SET
-                                        .find_syntax_by_token(lang)
-                                        .unwrap_or_else(|| SYNTAX_SET.find_syntax_plain_text());
-                                    let theme = &THEME_SET.themes["base16-ocean.dark"];
-                                    let bg = theme
-                                        .settings
-                                        .background
-                                        .unwrap_or(Color { r: 0, g: 0, b: 0, a: 0 });
-                                    let mut html = format!(
-                                        "<pre style=\"background-color:#{:02x}{:02x}{:02x};\">",
-                                        bg.r, bg.g, bg.b
-                                    );
-                                    let mut highlighter = HighlightLines::new(syntax, theme);
-
-                                    for line in LinesWithEndings::from(&content) {
-                                        if let Ok(ranges) = highlighter.highlight_line(line, &SYNTAX_SET) {
-                                            for (style, text) in ranges.iter() {
-                                                let fg = style.foreground;
-                                                let _ = write!(
-                                                    &mut html,
-                                                    "<span style=\"color:#{:02x}{:02x}{:02x};\">{}</span>",
-                                                    fg.r,
-                                                    fg.g,
-                                                    fg.b,
-                                                    escape(text)
-                                                );
-                                            }
-                                        } else {
-                                            let _ = write!(&mut html, "{}", escape(line));
-                                        }
-                                    }
-                                    html.push_str("</pre>");
-                                    node.content = Some(html);
+                                    node.content = Some(highlight_code(lang, &content));
                                 } else {
                                     node.content = Some(content);
                                 }

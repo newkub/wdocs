@@ -1,3 +1,4 @@
+use crate::config::RenderFlags;
 use pulldown_cmark::Event;
 
 pub mod directive;
@@ -5,7 +6,7 @@ pub mod syntax;
 pub mod toc;
 
 pub trait Plugin: Send + Sync {
-    fn process<'a>(&self, input: &str, events: &mut Vec<Event<'a>>) -> bool;
+    fn process<'a>(&self, flags: RenderFlags, events: &mut Vec<Event<'a>>) -> bool;
 }
 
 pub struct PluginManager {
@@ -21,10 +22,10 @@ impl PluginManager {
         self.plugins.push(plugin);
     }
 
-    pub fn apply_plugins<'a>(&self, input: &str, events: &mut Vec<Event<'a>>) -> bool {
+    pub fn apply_plugins<'a>(&self, flags: RenderFlags, events: &mut Vec<Event<'a>>) -> bool {
         let mut changed = false;
         for plugin in &self.plugins {
-            if plugin.process(input, events) {
+            if plugin.process(flags, events) {
                 changed = true;
             }
         }
@@ -44,6 +45,8 @@ impl Default for PluginManager {
         let mut manager = PluginManager::new();
         manager.add_plugin(Box::new(toc::TocPlugin));
         manager.add_plugin(Box::new(directive::DirectivePlugin));
+        manager.add_plugin(Box::new(syntax::SyntaxHighlightingPlugin));
+        manager.add_plugin(Box::new(syntax::SyntaxHighlightingPlugin));
         manager
     }
 }

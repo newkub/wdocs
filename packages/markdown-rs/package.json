@@ -3,23 +3,25 @@
 	"version": "0.0.0",
 	"main": "index.js",
 	"types": "index.d.ts",
+	"type": "module",
 	"napi": {
 		"binaryName": "markdown-rs",
 		"triples": []
 	},
 	"scripts": {
 		"build": "napi build --release",
-		"build:debug": "napi build",
-		"lint": "cargo clippy",
 		"test": "bun test",
+		"bench": "bun run benches/run.mjs",
+		"bench:rust": "cargo bench --bench markdown_bench",
+		"lint": "cargo clippy",
 		"format": "biome format --write .",
 		"verify": "bun run lint && bun run format && bun run build && bun run test",
 		"review": "bun run verify",
-		"bench": "bun run benches/run.mjs"
+		"clean": "cargo clean"
 	},
 	"devDependencies": {
 		"@napi-rs/cli": "^3.5.0",
-		"benny": "^3.7.1",
+		"tinybench": "^2.8.0",
 		"comrak": "^0.4.2",
 		"execa": "^9.6.1",
 		"hyperfine": "^1.0.0",

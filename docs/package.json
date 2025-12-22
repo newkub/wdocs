@@ -6,11 +6,12 @@
     "dev": "wdocs dev",
     "generate": "wdocs generate",
     "preview": "wdocs preview",
-    "lint": "oxlint --fix",
-    "format": "oxlint --fix"
+    "lint": "biome lint --write .",
+    "test": "echo \"No tests specified\"",
+    "verify": "bun run lint && bun run test"
   },
   "devDependencies": {
-    "wdocs": "workspace:*",
-    "oxlint": "^1.33.0"
+    "@biomejs/biome": "^2.3.10",
+    "wdocs": "workspace:*"
   }
 }

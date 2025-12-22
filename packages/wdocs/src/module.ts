@@ -13,7 +13,7 @@ export interface ModuleOptions {
   description: string;
 }
 
-export default defineNuxtModule<ModuleOptions>({
+export default defineNuxtModule<ModuleOptions & { theme?: { primary: string } }>({
   meta: {
     name: 'wdocs',
     configKey: 'wdocs'
@@ -46,7 +46,15 @@ export default defineNuxtModule<ModuleOptions>({
     // Install dependencies
     await installModule('@nuxtjs/color-mode')
     await installModule('@nuxt/icon')
-    await installModule('@unocss/nuxt')
+    await installModule('@unocss/nuxt', {
+      preflight: true,
+      uno: true,
+      theme: {
+        colors: {
+          primary: options.theme?.primary || '#007bff'
+        }
+      }
+    })
     await installModule('@vueuse/nuxt')
     await installModule('@pinia/nuxt')
   }

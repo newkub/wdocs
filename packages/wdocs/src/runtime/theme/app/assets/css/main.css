@@ -3,6 +3,7 @@
   padding: 1rem 1.5rem;
   margin: 1rem 0;
   border-left-width: 4px;
+  position: relative;
 }
 
 .custom-container-title {
@@ -10,7 +11,7 @@
   margin-bottom: 0.5rem;
 }
 
-.custom-container.info {
+.custom-container.tip {
   background-color: #e6f7ff;
   border-color: #91d5ff;
   color: #0050b3;
@@ -36,9 +37,22 @@
 }
 
 .dark .shiki {
-  background-color: #1a1a1a !important;
+  background-color: #1a1a1a;
 }
 
 .light .shiki {
-  background-color: #f5f5f5 !important;
+  background-color: #f5f5f5;
+}
+
+.line.highlighted {
+  background-color: rgba(100, 100, 100, 0.1);
+  display: block;
+  margin: 0 -1rem;
+  padding: 0 1rem;
+  border-left: 2px solid #f8b100;
+}
+
+.dark .line.highlighted {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left-color: #f8b100;
 }

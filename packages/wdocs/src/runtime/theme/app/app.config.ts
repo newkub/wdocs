@@ -1,4 +1,4 @@
-import type { WDocsConfig } from './app/types/config'
+import type { WDocsConfig } from '../shared/types/config'
 
 export default defineAppConfig({
   wdocs: {
@@ -43,6 +43,15 @@ export default defineAppConfig({
     footer: {
       message: 'Released under the MIT License.',
       copyright: 'Copyright © 2024-present Your Name'
+    },
+    editPage: {
+      repo: '',
+      branch: 'main',
+      dir: 'content',
+      text: 'Edit this page on GitHub'
+    },
+    theme: {
+      primary: '#007bff'
     }
   } as WDocsConfig
 })

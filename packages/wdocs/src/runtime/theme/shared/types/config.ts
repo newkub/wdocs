@@ -24,4 +24,13 @@ export interface WDocsConfig {
     message: string;
     copyright: string;
   };
+  theme: {
+    primary: string;
+  };
+  editPage: {
+    repo: string;
+    branch?: string;
+    dir?: string;
+    text?: string;
+  };
 }

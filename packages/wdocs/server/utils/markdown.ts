@@ -12,7 +12,9 @@ async function getHighlighter() {
   if (highlighter) {
     return highlighter
   }
+    const oniguruma = await createOnigurumaEngine()
     highlighter = await createHighlighterCore({
+    engine: oniguruma,
     themes: [
       import('shiki/themes/vitesse-light.mjs'),
       import('shiki/themes/vitesse-dark.mjs'),
@@ -25,7 +27,6 @@ async function getHighlighter() {
       import('shiki/langs/json.mjs'),
       import('shiki/langs/shell.mjs'),
     ],
-    loadWasm: () => import('shiki/wasm')
   })
   return highlighter
 }

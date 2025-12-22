@@ -2,25 +2,29 @@
   "name": "wdocs",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "bun@1.3.4",
+  "packageManager": "bun@1.3.5",
   "workspaces": [
     "packages/*",
     "docs"
   ],
+  "type": "module",
   "scripts": {
-    "prepare": "bunx lefthook install",
-    "build": "turbo build",
-    "dev": "turbo dev --ui tui",
+    "prepare": "lefthook install",
+    "postinstall": "taze -r -w -i",
+    "dev": "turbo dev",
     "lint": "turbo lint",
+    "build": "turbo build",
     "format": "turbo format",
     "test": "turbo test",
-    "clean": "bunx rimraf dist node_modules .turbo",
-    "update:deps": "bunx taze -r -w && bun install",
-    "check:unused": "bunx knip",
-    "release": "bunx release-it",
-    "review": "bun update:deps && bun format && bun lint && bun test && bun build"
+    "verify": "turbo verify",
+    "start": "turbo watch verify",
+    "update:deps": "taze -r -w -i"
   },
   "devDependencies": {
-    "turbo": "^2.6.3"
+    "@biomejs/biome": "^1.9.4",
+    "lefthook": "^1.13.6",
+    "taze": "^0.16.9",
+    "turbo": "^2.7.1",
+    "typescript": "^5.9.3"
   }
 }

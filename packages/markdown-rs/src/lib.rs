@@ -11,6 +11,7 @@ pub mod adapters;
 pub mod services;
 pub mod types;
 pub mod utils;
+pub mod telemetry;
 
 pub use app::markdown_orchestrator::{render_unsafe, render_unsafe_no_highlight};
 
@@ -33,5 +34,10 @@ pub fn render_with_options(input: String, options: Option<RenderOptions>) -> Str
 #[napi]
 pub fn render_gfm(input: String) -> String {
     render_with_options(input, None)
+}
+
+#[napi]
+pub fn init() {
+    telemetry::init_subscriber();
 }
 

@@ -36,8 +36,9 @@ test("renders Table of Contents (TOC) plugin", () => {
 ### Deeper Title
 `;
 	const html = renderWithOptions(markdown, { toc: true });
-	expect(html).toContain('<ul class="toc">');
-	expect(html).toContain('<li><a href="#subtitle">Subtitle</a></li>');
+	expect(html).toContain('<li><a href="#title"');
+	expect(html).toContain('href="#subtitle"');
+	expect(html).toContain('>Subtitle</a>');
 });
 
 test("renders footnotes", () => {

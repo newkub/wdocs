@@ -1,123 +1,2161 @@
-<!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Markdown Benchmark</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@unocss/reset/tailwind.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/@unocss/runtime"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
-</head>
-<body class="font-sans bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-  <div id="app" class="p-4 sm:p-8">
-    <div class="max-w-4xl mx-auto">
-      <header class="text-center mb-8">
-        <h1 class="text-4xl font-bold mb-2">Markdown Benchmark</h1>
-        <p class="text-gray-500 dark:text-gray-400">Comparing performance of JavaScript & Rust libraries</p>
-      </header>
-
-      <div v-if="loading" class="text-center py-12">
-        <p>Loading benchmark data...</p>
-      </div>
-
-      <div v-else-if="error" class="text-center py-12 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg p-4">
-        <p class="font-bold">Error loading data</p>
-        <p class="text-sm">{{ error }}</p>
-        <p class="mt-2 text-xs">Please run <code class="bg-gray-200 dark:bg-gray-700 p-1 rounded">bun run bench</code> to generate results.</p>
-      </div>
-
-      <main v-else>
-        <div class="flex justify-center border-b border-gray-200 dark:border-gray-700 mb-6">
-          <button v-for="tab in tabs" :key="tab"
-            @click="activeTab = tab"
-            :class="['px-4 py-2 -mb-px text-sm font-medium border-b-2', activeTab === tab ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300']">
-            {{ tab }}
-          </button>
-        </div>
-
-        <div v-for="(data, key) in benchmarks" :key="key">
-          <div v-if="key === activeTab.toLowerCase()">
-            <h2 class="text-2xl font-semibold mb-4 text-center">{{ data.name }}</h2>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-              <table class="w-full text-left">
-                <thead class="bg-gray-50 dark:bg-gray-700/50">
-                  <tr>
-                    <th class="p-4 font-semibold w-1/4">Library</th>
-                    <th class="p-4 font-semibold w-1/4 text-right">Ops/sec</th>
-                    <th class="p-4 font-semibold w-1/2">Relative Performance</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="item in processedResults(data.results)" :key="item.name" class="border-t border-gray-200 dark:border-gray-700">
-                    <td class="p-4 font-medium">{{ item.name }}</td>
-                    <td class="p-4 text-right font-mono">{{ item.ops.toLocaleString() }}</td>
-                    <td class="p-4">
-                      <div class="flex items-center">
-                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
-                          <div :class="['h-4 rounded-full', item.colorClass]" :style="{ width: item.relative + '%' }"></div>
-                        </div>
-                        <span class="ml-3 text-sm font-medium">{{ item.relative.toFixed(2) }}%</span>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  </div>
-
-  <script type="module">
-    const { createApp, ref, onMounted, computed } = Vue;
-
-    createApp({
-      setup() {
-        const loading = ref(true);
-        const error = ref(null);
-        const benchmarks = ref({});
-        const tabs = ref([]);
-        const activeTab = ref('');
-
-        const fetchData = async () => {
-          try {
-            const response = await fetch('./results.json');
-            if (!response.ok) throw new Error('results.json not found.');
-            const data = await response.json();
-            benchmarks.value = data;
-            tabs.value = Object.keys(data).map(k => k.charAt(0).toUpperCase() + k.slice(1));
-            activeTab.value = tabs.value[0] || '';
-          } catch (e) {
-            error.value = e.message;
-          } finally {
-            loading.value = false;
-          }
-        };
-
-        const processedResults = (results) => {
-            if (!results || results.length === 0) return [];
-            const sorted = [...results].sort((a, b) => b.ops - a.ops);
-            const fastest = sorted[0]?.ops || 0;
-            return sorted.map(item => ({
-                ...item,
-                relative: fastest > 0 ? (item.ops / fastest * 100) : 0,
-                colorClass: item.name.includes('markdown-rs') ? 'bg-blue-500' : 'bg-gray-400 dark:bg-gray-500'
-            }));
-        };
-
-        onMounted(fetchData);
-
-        return {
-          loading,
-          error,
-          benchmarks,
-          tabs,
-          activeTab,
-          processedResults
-        };
-      }
-    }).mount('#app');
-  </script>
-</body>
-</html>
+<!DOCTYPE html><html><head><title>Markdown Benchmark Results</title><style>
+        body { font-family: sans-serif; margin: 2em; color: #333; background-color: #f9f9f9; }
+        h1, h2 { color: #111; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 2em; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        .results { display: grid; grid-template-columns: 1fr 1fr; gap: 2em; }
+        .rendered-output { border: 1px solid #ddd; padding: 1em; background-color: #fff; border-radius: 5px; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+        code { font-family: monospace; }
+    </style></head><body><h1>Markdown Benchmark Results</h1><h2>JavaScript Markdown Parsers</h2><table><tr><th>Library</th><th>Ops/sec</th><th>Margin (±%)</th></tr><tr><td>pulldown-cmark-wasm</td><td>725.59</td><td>6.36</td></tr><tr><td>markdown-rs</td><td>450.31</td><td>19.4</td></tr><tr><td>comrak</td><td>366.85</td><td>13.2</td></tr><tr><td>remarkable</td><td>338.33</td><td>24.35</td></tr><tr><td>markdown-it</td><td>155.97</td><td>19.39</td></tr><tr><td>showdown</td><td>77.8</td><td>16.14</td></tr><tr><td>marked</td><td>28.98</td><td>8.08</td></tr></table><h2>Rust Markdown Parsers</h2><table><tr><th>Library</th><th>Ops/sec</th><th>Margin (±%)</th></tr><tr><td>pulldown-cmark</td><td>5,399.1</td><td>NaN</td></tr><tr><td>comrak (gfm)</td><td>1,798.25</td><td>NaN</td></tr><tr><td>markdown-rs (gfm)</td><td>417.23</td><td>NaN</td></tr><tr><td>markdown-rs (safe, default)</td><td>359.17</td><td>NaN</td></tr></table><h2>Rendered Output Comparison</h2><div class="results"><div><h3>markdown-rs</h3><div class="rendered-output"><h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code>function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table><thead><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr></thead><tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com" rel="noopener noreferrer">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<hr>
+<p>This is the end of the sample file. Let's repeat some content to make it larger.</p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code>function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table><thead><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr></thead><tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com" rel="noopener noreferrer">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code>function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table><thead><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr></thead><tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com" rel="noopener noreferrer">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code>function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table><thead><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr></thead><tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com" rel="noopener noreferrer">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code>function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table><thead><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr></thead><tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com" rel="noopener noreferrer">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code>function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table><thead><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr></thead><tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com" rel="noopener noreferrer">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code>function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table><thead><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr></thead><tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com" rel="noopener noreferrer">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code>function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table><thead><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr></thead><tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com" rel="noopener noreferrer">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+</div></div><div><h3>marked</h3><div class="rendered-output"><h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<hr>
+<p>This is the end of the sample file. Let&#39;s repeat some content to make it larger.</p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody></table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+</div></div><div><h3>markdown-it</h3><div class="rendered-output"><h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<hr>
+<p>This is the end of the sample file. Let's repeat some content to make it larger.</p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+<th>Header 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+<td>Cell 3</td>
+</tr>
+<tr>
+<td>Cell 4</td>
+<td>Cell 5</td>
+<td>Cell 6</td>
+</tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+</div></div><div><h3>remarkable</h3><div class="rendered-output"><h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr>
+</thead>
+<tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<hr>
+<p>This is the end of the sample file. Let's repeat some content to make it larger.</p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr>
+</thead>
+<tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr>
+</thead>
+<tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr>
+</thead>
+<tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr>
+</thead>
+<tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr>
+</thead>
+<tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr>
+</thead>
+<tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr>
+</thead>
+<tbody>
+<tr><td>Cell 1</td><td>Cell 2</td><td>Cell 3</td></tr>
+<tr><td>Cell 4</td><td>Cell 5</td><td>Cell 6</td></tr>
+</tbody>
+</table>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image"></p>
+</div></div><div><h3>showdown</h3><div class="rendered-output"><h1 id="markdownbenchmark">Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2 id="lists">Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2 id="codeblocks">Code Blocks</h2>
+<pre><code class="javascript language-javascript">function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2 id="blockquotes">Blockquotes</h2>
+<blockquote>
+  <p>This is a blockquote. It can span multiple lines.
+  Like this one.</p>
+</blockquote>
+<h2 id="tables">Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2 id="linksandimages">Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<hr />
+<p>This is the end of the sample file. Let's repeat some content to make it larger.</p>
+<h1 id="markdownbenchmark-1">Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2 id="lists-1">Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2 id="codeblocks-1">Code Blocks</h2>
+<pre><code class="javascript language-javascript">function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2 id="blockquotes-1">Blockquotes</h2>
+<blockquote>
+  <p>This is a blockquote. It can span multiple lines.
+  Like this one.</p>
+</blockquote>
+<h2 id="tables-1">Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2 id="linksandimages-1">Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1 id="markdownbenchmark-2">Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2 id="lists-2">Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2 id="codeblocks-2">Code Blocks</h2>
+<pre><code class="javascript language-javascript">function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2 id="blockquotes-2">Blockquotes</h2>
+<blockquote>
+  <p>This is a blockquote. It can span multiple lines.
+  Like this one.</p>
+</blockquote>
+<h2 id="tables-2">Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2 id="linksandimages-2">Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1 id="markdownbenchmark-3">Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2 id="lists-3">Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2 id="codeblocks-3">Code Blocks</h2>
+<pre><code class="javascript language-javascript">function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2 id="blockquotes-3">Blockquotes</h2>
+<blockquote>
+  <p>This is a blockquote. It can span multiple lines.
+  Like this one.</p>
+</blockquote>
+<h2 id="tables-3">Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2 id="linksandimages-3">Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1 id="markdownbenchmark-4">Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2 id="lists-4">Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2 id="codeblocks-4">Code Blocks</h2>
+<pre><code class="javascript language-javascript">function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2 id="blockquotes-4">Blockquotes</h2>
+<blockquote>
+  <p>This is a blockquote. It can span multiple lines.
+  Like this one.</p>
+</blockquote>
+<h2 id="tables-4">Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2 id="linksandimages-4">Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1 id="markdownbenchmark-5">Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2 id="lists-5">Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2 id="codeblocks-5">Code Blocks</h2>
+<pre><code class="javascript language-javascript">function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2 id="blockquotes-5">Blockquotes</h2>
+<blockquote>
+  <p>This is a blockquote. It can span multiple lines.
+  Like this one.</p>
+</blockquote>
+<h2 id="tables-5">Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2 id="linksandimages-5">Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1 id="markdownbenchmark-6">Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2 id="lists-6">Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2 id="codeblocks-6">Code Blocks</h2>
+<pre><code class="javascript language-javascript">function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2 id="blockquotes-6">Blockquotes</h2>
+<blockquote>
+  <p>This is a blockquote. It can span multiple lines.
+  Like this one.</p>
+</blockquote>
+<h2 id="tables-6">Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2 id="linksandimages-6">Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1 id="markdownbenchmark-7">Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2 id="lists-7">Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2 id="codeblocks-7">Code Blocks</h2>
+<pre><code class="javascript language-javascript">function hello() {
+  console.log("Hello, World!");
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2 id="blockquotes-7">Blockquotes</h2>
+<blockquote>
+  <p>This is a blockquote. It can span multiple lines.
+  Like this one.</p>
+</blockquote>
+<h2 id="tables-7">Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2 id="linksandimages-7">Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p></div></div><div><h3>pulldown-cmark-wasm</h3><div class="rendered-output"><h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>
+<p>Unordered list item 1</p>
+</li>
+<li>
+<p>Unordered list item 2</p>
+</li>
+<li>
+<p>Unordered list item 3</p>
+</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<hr />
+<p>This is the end of the sample file. Let's repeat some content to make it larger.</p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>
+<p>Unordered list item 1</p>
+</li>
+<li>
+<p>Unordered list item 2</p>
+</li>
+<li>
+<p>Unordered list item 3</p>
+</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>
+<p>Unordered list item 1</p>
+</li>
+<li>
+<p>Unordered list item 2</p>
+</li>
+<li>
+<p>Unordered list item 3</p>
+</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>
+<p>Unordered list item 1</p>
+</li>
+<li>
+<p>Unordered list item 2</p>
+</li>
+<li>
+<p>Unordered list item 3</p>
+</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>
+<p>Unordered list item 1</p>
+</li>
+<li>
+<p>Unordered list item 2</p>
+</li>
+<li>
+<p>Unordered list item 3</p>
+</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>
+<p>Unordered list item 1</p>
+</li>
+<li>
+<p>Unordered list item 2</p>
+</li>
+<li>
+<p>Unordered list item 3</p>
+</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>
+<p>Unordered list item 1</p>
+</li>
+<li>
+<p>Unordered list item 2</p>
+</li>
+<li>
+<p>Unordered list item 3</p>
+</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2>Lists</h2>
+<ul>
+<li>
+<p>Unordered list item 1</p>
+</li>
+<li>
+<p>Unordered list item 2</p>
+</li>
+<li>
+<p>Unordered list item 3</p>
+</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+</div></div><div><h3>comrak</h3><div class="rendered-output"><h1><a href="#markdown-benchmark" aria-hidden="true" class="anchor" id="markdown-benchmark"></a>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2><a href="#lists" aria-hidden="true" class="anchor" id="lists"></a>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2><a href="#code-blocks" aria-hidden="true" class="anchor" id="code-blocks"></a>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2><a href="#blockquotes" aria-hidden="true" class="anchor" id="blockquotes"></a>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2><a href="#tables" aria-hidden="true" class="anchor" id="tables"></a>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2><a href="#links-and-images" aria-hidden="true" class="anchor" id="links-and-images"></a>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<hr />
+<p>This is the end of the sample file. Let's repeat some content to make it larger.</p>
+<h1><a href="#markdown-benchmark-1" aria-hidden="true" class="anchor" id="markdown-benchmark-1"></a>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2><a href="#lists-1" aria-hidden="true" class="anchor" id="lists-1"></a>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2><a href="#code-blocks-1" aria-hidden="true" class="anchor" id="code-blocks-1"></a>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2><a href="#blockquotes-1" aria-hidden="true" class="anchor" id="blockquotes-1"></a>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2><a href="#tables-1" aria-hidden="true" class="anchor" id="tables-1"></a>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2><a href="#links-and-images-1" aria-hidden="true" class="anchor" id="links-and-images-1"></a>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1><a href="#markdown-benchmark-2" aria-hidden="true" class="anchor" id="markdown-benchmark-2"></a>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2><a href="#lists-2" aria-hidden="true" class="anchor" id="lists-2"></a>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2><a href="#code-blocks-2" aria-hidden="true" class="anchor" id="code-blocks-2"></a>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2><a href="#blockquotes-2" aria-hidden="true" class="anchor" id="blockquotes-2"></a>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2><a href="#tables-2" aria-hidden="true" class="anchor" id="tables-2"></a>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2><a href="#links-and-images-2" aria-hidden="true" class="anchor" id="links-and-images-2"></a>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1><a href="#markdown-benchmark-3" aria-hidden="true" class="anchor" id="markdown-benchmark-3"></a>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2><a href="#lists-3" aria-hidden="true" class="anchor" id="lists-3"></a>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2><a href="#code-blocks-3" aria-hidden="true" class="anchor" id="code-blocks-3"></a>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2><a href="#blockquotes-3" aria-hidden="true" class="anchor" id="blockquotes-3"></a>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2><a href="#tables-3" aria-hidden="true" class="anchor" id="tables-3"></a>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2><a href="#links-and-images-3" aria-hidden="true" class="anchor" id="links-and-images-3"></a>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1><a href="#markdown-benchmark-4" aria-hidden="true" class="anchor" id="markdown-benchmark-4"></a>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2><a href="#lists-4" aria-hidden="true" class="anchor" id="lists-4"></a>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2><a href="#code-blocks-4" aria-hidden="true" class="anchor" id="code-blocks-4"></a>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2><a href="#blockquotes-4" aria-hidden="true" class="anchor" id="blockquotes-4"></a>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2><a href="#tables-4" aria-hidden="true" class="anchor" id="tables-4"></a>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2><a href="#links-and-images-4" aria-hidden="true" class="anchor" id="links-and-images-4"></a>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1><a href="#markdown-benchmark-5" aria-hidden="true" class="anchor" id="markdown-benchmark-5"></a>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2><a href="#lists-5" aria-hidden="true" class="anchor" id="lists-5"></a>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2><a href="#code-blocks-5" aria-hidden="true" class="anchor" id="code-blocks-5"></a>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2><a href="#blockquotes-5" aria-hidden="true" class="anchor" id="blockquotes-5"></a>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2><a href="#tables-5" aria-hidden="true" class="anchor" id="tables-5"></a>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2><a href="#links-and-images-5" aria-hidden="true" class="anchor" id="links-and-images-5"></a>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1><a href="#markdown-benchmark-6" aria-hidden="true" class="anchor" id="markdown-benchmark-6"></a>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2><a href="#lists-6" aria-hidden="true" class="anchor" id="lists-6"></a>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2><a href="#code-blocks-6" aria-hidden="true" class="anchor" id="code-blocks-6"></a>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2><a href="#blockquotes-6" aria-hidden="true" class="anchor" id="blockquotes-6"></a>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2><a href="#tables-6" aria-hidden="true" class="anchor" id="tables-6"></a>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2><a href="#links-and-images-6" aria-hidden="true" class="anchor" id="links-and-images-6"></a>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+<h1><a href="#markdown-benchmark-7" aria-hidden="true" class="anchor" id="markdown-benchmark-7"></a>Markdown Benchmark</h1>
+<p>This is a sample markdown file for benchmarking purposes. It contains various elements to test the performance of different markdown parsers.</p>
+<h2><a href="#lists-7" aria-hidden="true" class="anchor" id="lists-7"></a>Lists</h2>
+<ul>
+<li>Unordered list item 1</li>
+<li>Unordered list item 2</li>
+<li>Unordered list item 3</li>
+</ul>
+<ol>
+<li>Ordered list item 1</li>
+<li>Ordered list item 2</li>
+<li>Ordered list item 3</li>
+</ol>
+<h2><a href="#code-blocks-7" aria-hidden="true" class="anchor" id="code-blocks-7"></a>Code Blocks</h2>
+<pre><code class="language-javascript">function hello() {
+  console.log(&quot;Hello, World!&quot;);
+}
+</code></pre>
+<p><code>inline code</code></p>
+<h2><a href="#blockquotes-7" aria-hidden="true" class="anchor" id="blockquotes-7"></a>Blockquotes</h2>
+<blockquote>
+<p>This is a blockquote. It can span multiple lines.
+Like this one.</p>
+</blockquote>
+<h2><a href="#tables-7" aria-hidden="true" class="anchor" id="tables-7"></a>Tables</h2>
+<p>| Header 1 | Header 2 | Header 3 |
+| -------- | -------- | -------- |
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |</p>
+<h2><a href="#links-and-images-7" aria-hidden="true" class="anchor" id="links-and-images-7"></a>Links and Images</h2>
+<p><a href="https://example.com">This is a link</a></p>
+<p><img src="https://example.com/image.png" alt="This is an image" /></p>
+</div></div></div></body></html>

@@ -1,26 +1,19 @@
-use crate::components::{ast::build_ast, render::render_to_html_string, toc::generate_toc_html};
+use crate::components::{ast::build_ast, render::render_to_html_string};
 use crate::config::RenderFlags;
 use crate::adapters::pulldown_cmark::parser::create_parser;
-use crate::services::sanitizer;
 
 
 pub fn render(input: String) -> String {
-    let flags = RenderFlags::default();
-    let unsafe_html = render_to_html_string(&input, flags);
-    sanitizer::sanitize(unsafe_html, flags.sanitize)
+    let flags = RenderFlags {
+        sanitize: true,
+        ..RenderFlags::default()
+    };
+    render_to_html_string(&input, flags)
 }
 
 
 pub fn render_with_options(input: String, flags: RenderFlags) -> String {
-    let processed_input = if flags.toc {
-        let toc_html = generate_toc_html(&input);
-        input.replacen("[toc]", &toc_html, 1)
-    } else {
-        input
-    };
-
-    let unsafe_html = render_to_html_string(&processed_input, flags);
-    sanitizer::sanitize(unsafe_html, flags.sanitize)
+    render_to_html_string(&input, flags)
 }
 
 pub fn parse(input: String) -> String {
@@ -29,8 +22,8 @@ pub fn parse(input: String) -> String {
         footnotes: true,
         ..Default::default()
     };
-    let parser = create_parser(&input, flags);
-    let ast = build_ast(parser, false);
+    let mut parser = create_parser(&input, flags);
+    let ast = build_ast(&mut parser);
     serde_json::to_string(&ast).unwrap_or_else(|_| "null".to_string())
 }
 

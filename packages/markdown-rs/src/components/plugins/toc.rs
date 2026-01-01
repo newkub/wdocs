@@ -1,8 +1,7 @@
 use pulldown_cmark::{CowStr, Event, HeadingLevel, Tag, TagEnd};
 use crate::components::plugins::Plugin;
-use crate::config::RenderFlags;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Heading {
     level: HeadingLevel,
     text: String,
@@ -12,98 +11,125 @@ struct Heading {
 pub struct TocPlugin;
 
 impl Plugin for TocPlugin {
-    fn process<'a>(&self, flags: RenderFlags, events: &mut Vec<Event<'a>>) -> bool {
-        if !flags.toc {
-            return false;
-        }
-        let mut headings = Vec::new();
-        let mut toc_placeholder_indices = Vec::new();
+    fn process<'a>(
+        &self,
+        events: Box<dyn Iterator<Item = Event<'a>> + 'a>,
+    ) -> Box<dyn Iterator<Item = Event<'a>> + 'a> {
+        // First pass: Collect events to enable a second pass
+        let events_vec: Vec<Event<'a>> = events.collect();
+        let mut has_toc_placeholder = false;
 
-        // First pass: Collect heading information and find [toc] placeholders
-        for i in 0..events.len() {
-            match &events[i] {
+        // Second pass (on the collected vector): Collect headings and check for placeholder
+        let mut current_heading_text = String::new();
+        let mut in_heading = false;
+
+        for event in &events_vec {
+            match event {
                 Event::Start(Tag::Heading { .. }) => {
-                    let mut heading_text = String::new();
-                    let mut j = i + 1;
-                    while j < events.len() {
-                        if let Event::Text(text) = &events[j] {
-                            heading_text.push_str(text);
-                        } else if let Event::End(TagEnd::Heading(..)) = &events[j] {
-                            break;
-                        }
-                        j += 1;
+                    in_heading = true;
+                    current_heading_text.clear();
+                }
+                Event::End(TagEnd::Heading(..)) => {
+                    in_heading = false;
+                }
+                Event::Text(text) => {
+                    if in_heading {
+                        current_heading_text.push_str(text);
+                    } else if text.contains("[toc]") {
+                        has_toc_placeholder = true;
                     }
-                    headings.push((i, heading_text)); // Store index and text
                 }
-                Event::Text(text) if text.contains("[toc]") => {
-                    toc_placeholder_indices.push(i);
-                }
-                _ => {},
+                _ => {}
             }
         }
 
-        if toc_placeholder_indices.is_empty() {
-            return false;
+        if !has_toc_placeholder {
+            return Box::new(events_vec.into_iter());
         }
 
-        // Second pass: Mutate headings and generate TOC data
-        let mut toc_headings = Vec::new();
-        for (index, text) in headings {
-            if let Event::Start(Tag::Heading { level, id, .. }) = &mut events[index] {
-                let trimmed_text = text.trim();
-                let slug = trimmed_text.to_lowercase().replace(' ', "-");
-                let final_id = id.as_ref().map_or_else(|| slug, |s| s.to_string());
+        // Generate TOC HTML
+        let toc_html = Self::generate_toc_html_from_events(&events_vec);
 
-                toc_headings.push(Heading {
-                    level: *level,
-                    text: trimmed_text.to_string(),
-                    id: final_id.clone(),
-                });
-
-                if id.is_none() {
-                    *id = Some(CowStr::from(final_id));
+        // Third pass: Map and replace
+        let final_events = events_vec.into_iter().flat_map(move |event| {
+            if let Event::Text(text) = &event {
+                if text.contains("[toc]") {
+                    let new_text = text.replace("[toc]", &toc_html);
+                    return vec![Event::Html(CowStr::from(new_text))].into_iter();
                 }
             }
-        }
+            vec![event].into_iter()
+        });
 
-        // Third pass: Replace placeholders
-        let toc_html = Self::generate_toc_html(&toc_headings);
-        for index in toc_placeholder_indices.iter().rev() {
-            let start = if *index > 0 && matches!(events[*index - 1], Event::Start(Tag::Paragraph)) {
-                *index - 1
-            } else {
-                *index
-            };
-            let end = if *index + 1 < events.len() && matches!(events[*index + 1], Event::End(TagEnd::Paragraph)) {
-                *index + 1
-            } else {
-                *index
-            };
-            events.splice(start..=end, [Event::Html(CowStr::from(toc_html.clone()))]);
-        }
-
-        true
+        Box::new(final_events)
     }
 }
 
 impl TocPlugin {
-    fn generate_toc_html(headings: &[Heading]) -> String {
-        let mut html = String::from("<ul class=\"toc\">");
-        for heading in headings {
-            let indent = match heading.level {
-                HeadingLevel::H1 => "",
-                HeadingLevel::H2 => "  ",
-                HeadingLevel::H3 => "    ",
-                _ => continue, // Ignore other levels
-            };
-            html.push_str(&format!(
-                "<li>{}<a href=\"#{}\">{}</a></li>\n",
-                indent,
-                heading.id,
-                heading.text
-            ));
+    fn generate_toc_html_from_events(events: &[Event]) -> String {
+        let mut headings: Vec<Heading> = Vec::new();
+        let mut current_heading_text = String::new();
+        let mut current_level = HeadingLevel::H1;
+
+        for event in events {
+            match event {
+                Event::Start(Tag::Heading { level, .. }) => {
+                    current_level = *level;
+                    current_heading_text.clear();
+                }
+                Event::Text(text) => {
+                    current_heading_text.push_str(text);
+                }
+                Event::End(TagEnd::Heading(..)) => {
+                    let slug = current_heading_text.to_lowercase().replace(' ', "-");
+                    headings.push(Heading {
+                        level: current_level,
+                        text: current_heading_text.clone(),
+                        id: slug,
+                    });
+                }
+                _ => {}
+            }
         }
-        html.push_str("</ul>");
+
+        if headings.is_empty() {
+            return String::new();
+        }
+
+        let mut html = String::from("<ul class=\"toc\">");
+        let mut last_level = headings[0].level;
+
+        for heading in &headings {
+            let level_diff = heading.level as i8 - last_level as i8;
+
+            if level_diff > 0 {
+                for _ in 0..level_diff {
+                    html.push_str("<ul>");
+                }
+            } else if level_diff < 0 {
+                for _ in 0..-level_diff {
+                    html.push_str("</ul></li>");
+                }
+            }
+
+            if level_diff <= 0 {
+                html.push_str("</li>");
+            }
+
+            html.push_str(&format!(
+                "<li><a href=\"#{}\" rel=\"noopener noreferrer\">{}",
+                heading.id, heading.text
+            ));
+            last_level = heading.level;
+        }
+
+        // Close remaining tags
+        let mut open_tags = last_level as i8 - headings[0].level as i8;
+        while open_tags >= 0 {
+            html.push_str("</li></ul>");
+            open_tags -= 1;
+        }
+
         html
     }
 }

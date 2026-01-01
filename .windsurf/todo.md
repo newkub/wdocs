@@ -1,0 +1,1 @@
+ไม่ใช้ biome ทั้งหมด ใช /follow-dprint สำหรับ format ใช้ /follow-oxlint สำหรับ lint

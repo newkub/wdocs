@@ -9,6 +9,13 @@ pub struct RenderOptions {
     pub directives: Option<bool>,
     pub gfm: Option<bool>,
     pub footnotes: Option<bool>,
+    pub spoiler: Option<bool>,
+    #[napi(js_name = "smartPunctuation")]
+    pub smart_punctuation: Option<bool>,
+    pub linkify: Option<bool>,
+    pub admonitions: Option<bool>,
+    pub attributes: Option<bool>,
+    pub math: Option<bool>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -19,6 +26,12 @@ pub struct RenderFlags {
     pub directives: bool,
     pub gfm: bool,
     pub footnotes: bool,
+    pub spoiler: bool,
+    pub smart_punctuation: bool,
+    pub linkify: bool,
+    pub admonitions: bool,
+    pub attributes: bool,
+    pub math: bool,
 }
 
 impl Default for RenderFlags {
@@ -29,7 +42,13 @@ impl Default for RenderFlags {
             toc: false, // Disabled by default
             directives: false, // Disabled by default
             gfm: true,
-            footnotes: false, // Disabled by default
+            footnotes: true,
+            spoiler: false, // Disabled by default
+            smart_punctuation: false, // Disabled by default
+            linkify: false, // Disabled by default
+            admonitions: false, // Disabled by default
+            attributes: false, // Disabled by default
+            math: false, // Disabled by default
         }
     }
 }
@@ -43,6 +62,12 @@ impl RenderFlags {
             directives: false,
             gfm: false,
             footnotes: false,
+            spoiler: false,
+            smart_punctuation: false,
+            linkify: false,
+            admonitions: false,
+            attributes: false,
+            math: false,
         }
     }
 
@@ -56,6 +81,12 @@ impl RenderFlags {
                 directives: o.directives.unwrap_or(default_flags.directives),
                 gfm: o.gfm.unwrap_or(default_flags.gfm),
                 footnotes: o.footnotes.unwrap_or(default_flags.footnotes),
+                spoiler: o.spoiler.unwrap_or(default_flags.spoiler),
+                smart_punctuation: o.smart_punctuation.unwrap_or(default_flags.smart_punctuation),
+                linkify: o.linkify.unwrap_or(default_flags.linkify),
+                admonitions: o.admonitions.unwrap_or(default_flags.admonitions),
+                attributes: o.attributes.unwrap_or(default_flags.attributes),
+                math: o.math.unwrap_or(default_flags.math),
             }
         } else {
             default_flags

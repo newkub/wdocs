@@ -1,68 +1,63 @@
+import type { WDocsConfig } from './shared/types'
+
 export default defineAppConfig({
-  docus: {
-    title: 'wdocs',
-    description: 'The best place to start your documentation.',
-    image: 'https://user-images.githubusercontent.com/904724/185365452-87b7ca7b-6030-4813-a2a1-da174b27a390.svg',
-
+  wdocs: {
+    title: 'WDocs',
+    description: 'A VitePress-like documentation system built with Nuxt.',
     socials: {
-      github: 'wattanx/wdocs',
+      github: '',
+      twitter: ''
     },
-
     header: {
-      logo: true,
-      showLinkIcon: true,
-      exclude: [],
-      fluid: true
+      logo: true, // or a path to a custom logo
+      nav: [
+        { text: 'Get Started', link: '/getting-started' },
+        { text: 'Components', link: '/components/buttons' },
+        { text: 'Showcase', link: '/showcase' },
+        {
+          text: 'Resources',
+          items: [
+            { text: 'Blog', link: '/blog' },
+            { text: 'Community', link: 'https://github.com' },
+            { text: 'Help', link: '/help' },
+          ]
+        }
+      ]
     },
-
-    main: {
-      fluid: true,
-      padded: true
+    // Sidebar configuration
+    sidebar: {
+      '/guide/': [
+        {
+          text: 'Guide',
+          items: [
+            { text: 'Introduction', link: '/guide/introduction' },
+            { text: 'Getting Started', link: '/guide/getting-started' }
+          ]
+        }
+      ],
+      '/features/': [
+        {
+          text: 'Features',
+          items: [
+            { text: 'Markdown Extensions', link: '/features/markdown-extensions' },
+            { text: 'Custom Components', link: '/features/custom-components' }
+          ]
+        }
+      ]
     },
-
+    // Footer configuration
     footer: {
-      credits: {
-        icon: 'IconDocus',
-        text: 'Powered by Docus',
-        href: 'https://docus.dev',
-      },
-      iconLinks: [],
-      textLinks: [],
-      fluid: true
+      message: 'Released under the MIT License.',
+      copyright: ''
     },
-
-    aside: {
-      level: 0,
-      collapsed: false,
-      exclude: []
+    editPage: {
+      repo: '',
+      branch: 'main',
+      dir: 'content',
+      text: 'Edit this page on GitHub'
     },
-
-    navigation: [
-      {
-        title: 'Get Started',
-        url: '/guide/getting-started'
-      },
-      {
-        title: 'Components',
-        url: '/components'
-      },
-      {
-        title: 'Features',
-        url: '/features'
-      },
-      {
-        title: 'Showcase',
-        children: [
-          {
-            title: 'Docs',
-            url: '/showcase/docs'
-          },
-          {
-            title: 'API Docs',
-            url: '/showcase/api-docs'
-          }
-        ]
-      }
-    ]
-  }
+    theme: {
+      primary: '#007bff'
+    }
+  } as WDocsConfig
 })

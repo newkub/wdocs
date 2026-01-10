@@ -1,9 +1,9 @@
 use crate::components::inverted_index::{InvertedIndex, InvertedIndexBuilder};
 use crate::components::tokenizer::Tokenizer;
 use crate::types::document::{DocId, Document};
+use dashmap::DashMap;
 use rayon::prelude::*;
 use roaring::RoaringBitmap;
-use dashmap::DashMap;
 use rustc_hash::FxHashMap;
 
 pub struct Index {
@@ -33,11 +33,12 @@ impl Index {
         }
     }
 
-    pub fn add_documents(&mut self, docs: Vec<Document>) {
+    pub fn add_documents(&mut self, docs: Vec<Document>) -> Result<(), String> {
         if self.is_built {
-            panic!("Index is already built. Cannot add more documents.");
+            return Err("Index is already built. Cannot add more documents.".to_string());
         }
         self.staged_docs.extend(docs);
+        Ok(())
     }
 
     pub fn build(&mut self) {
@@ -45,8 +46,17 @@ impl Index {
             return;
         }
 
-        let docs_with_ids: Vec<Document> = self
-            .staged_docs
+        let docs_with_ids = self.assign_document_ids();
+        let final_postings_map = self.build_postings_map_parallel(&docs_with_ids);
+
+        let mut builder = InvertedIndexBuilder::new();
+        builder.postings_map = final_postings_map;
+        self.inverted_index = InvertedIndex::from_builder(builder);
+        self.is_built = true;
+    }
+
+    fn assign_document_ids(&mut self) -> Vec<Document> {
+        self.staged_docs
             .drain(..)
             .map(|mut doc| {
                 let doc_id = self.next_doc_id;
@@ -55,11 +65,13 @@ impl Index {
                 self.next_doc_id += 1;
                 doc
             })
-            .collect();
+            .collect()
+    }
 
+    fn build_postings_map_parallel(&self, docs: &[Document]) -> FxHashMap<String, RoaringBitmap> {
         let final_postings_map: DashMap<String, RoaringBitmap> = DashMap::new();
 
-        docs_with_ids.par_iter().for_each(|doc| {
+        docs.par_iter().for_each(|doc| {
             for value in doc.fields.values() {
                 let tokens = self.tokenizer.tokenize(value);
                 for token in tokens {
@@ -71,15 +83,7 @@ impl Index {
             }
         });
 
-        let final_postings_map = final_postings_map
-            .into_iter()
-            .collect::<FxHashMap<String, RoaringBitmap>>();
-
-        let mut builder = InvertedIndexBuilder::new();
-        builder.postings_map = final_postings_map;
-
-        self.inverted_index = InvertedIndex::from_builder(builder);
-        self.is_built = true;
+        final_postings_map.into_iter().collect()
     }
 
     pub fn search_ids(&self, query: &str) -> RoaringBitmap {
@@ -88,7 +92,7 @@ impl Index {
             return RoaringBitmap::new();
         }
 
-        // 1. Collect all bitmaps for the query tokens.
+        // 1. Collect all bitmaps for the query tokens from the inverted index.
         let mut bitmaps: Vec<&RoaringBitmap> = query_tokens
             .iter()
             .filter_map(|token| {
@@ -107,7 +111,6 @@ impl Index {
         // 2. Sort bitmaps by size (cardinality) to intersect smallest first.
         bitmaps.sort_unstable_by_key(|b| b.len());
 
-        // 3. Intersect all bitmaps.
         // 3. Intersect all bitmaps.
         if let Some((first, rest)) = bitmaps.split_first() {
             rest.iter().fold((*first).clone(), |acc, &bm| acc & bm)

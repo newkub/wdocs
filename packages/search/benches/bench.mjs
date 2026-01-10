@@ -1,118 +1,159 @@
-import { execSync } from 'child_process';
-import fs from 'fs/promises';
-import { createRequire } from 'module';
-import FlexSearch from 'flexsearch';
-import { MeiliSearch } from 'meilisearch';
-import lunr from 'lunr';
+import { execSync } from "child_process";
+import fs from "fs/promises";
+import { createRequire } from "module";
+import FlexSearch from "flexsearch";
+import { MeiliSearch } from "meilisearch";
+import lunr from "lunr";
 
 const require = createRequire(import.meta.url);
-const { NapiIndex } = require('../index.cjs');
+const { NapiIndex } = require("../index.cjs");
 
 // --- From dataset.mjs ---
 function sfc32(a, b, c, d) {
-    return function() {
-      a |= 0; b |= 0; c |= 0; d |= 0;
-      var t = (a + b | 0) + d | 0;
-      d = d + 1 | 0;
-      a = b ^ b >>> 9;
-      b = c + (c << 3) | 0;
-      c = (c << 21 | c >>> 11);
-      c = c + t | 0;
-      return (t >>> 0) / 4294967296;
-    }
+	return function () {
+		a |= 0;
+		b |= 0;
+		c |= 0;
+		d |= 0;
+		var t = (((a + b) | 0) + d) | 0;
+		d = (d + 1) | 0;
+		a = b ^ (b >>> 9);
+		b = (c + (c << 3)) | 0;
+		c = (c << 21) | (c >>> 11);
+		c = (c + t) | 0;
+		return (t >>> 0) / 4294967296;
+	};
 }
 const rand = sfc32(0x9e3779b9, 0x243f6a88, 0xb7e15162, 0x81994211);
-const WORDS = ['lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit', 'rust', 'search', 'performance', 'benchmark', 'fast', 'document', 'indexing', 'query', 'result', 'flexsearch', 'tantivy', 'meilisearch', 'wdocs', 'javascript', 'typescript', 'database', 'algorithm', 'optimization'];
+const WORDS = [
+	"lorem",
+	"ipsum",
+	"dolor",
+	"sit",
+	"amet",
+	"consectetur",
+	"adipiscing",
+	"elit",
+	"rust",
+	"search",
+	"performance",
+	"benchmark",
+	"fast",
+	"document",
+	"indexing",
+	"query",
+	"result",
+	"flexsearch",
+	"tantivy",
+	"meilisearch",
+	"wdocs",
+	"javascript",
+	"typescript",
+	"database",
+	"algorithm",
+	"optimization",
+];
 function getRandomWord() {
-    return WORDS[Math.floor(rand() * WORDS.length)];
+	return WORDS[Math.floor(rand() * WORDS.length)];
 }
 function generateSentence(wordCount) {
-    let sentence = '';
-    for (let i = 0; i < wordCount; i++) {
-        sentence += getRandomWord() + ' ';
-    }
-    return sentence.trim() + '.';
+	let sentence = "";
+	for (let i = 0; i < wordCount; i++) {
+		sentence += getRandomWord() + " ";
+	}
+	return sentence.trim() + ".";
 }
 function generateParagraph(sentenceCount) {
-    let paragraph = '';
-    for (let i = 0; i < sentenceCount; i++) {
-        paragraph += generateSentence(Math.floor(rand() * 10) + 5) + ' ';
-    }
-    return paragraph.trim();
+	let paragraph = "";
+	for (let i = 0; i < sentenceCount; i++) {
+		paragraph += generateSentence(Math.floor(rand() * 10) + 5) + " ";
+	}
+	return paragraph.trim();
 }
 function createDocs(count) {
-    const docs = [];
-    for (let i = 0; i < count; i++) {
-        docs.push({
-            id: i.toString(),
-            title: generateSentence(5),
-            body: generateParagraph(3),
-        });
-    }
-    return docs;
+	const docs = [];
+	for (let i = 0; i < count; i++) {
+		docs.push({
+			id: i.toString(),
+			title: generateSentence(5),
+			body: generateParagraph(3),
+		});
+	}
+	return docs;
 }
 
 // --- From node_bench.js ---
 async function benchWdocsSearch(docs, searchTerm) {
-    console.log('Benchmarking wdocs-search (N-API)...');
-    const index = new NapiIndex();
-    const startIndexing = performance.now();
-    index.addDocuments(docs.map(d => ({ fields: { title: d.title, body: d.body } })));
-    index.buildIndex();
-    const endIndexing = performance.now();
-    const startSearch = performance.now();
-    index.search(searchTerm);
-    const endSearch = performance.now();
-    return { indexing: endIndexing - startIndexing, search: endSearch - startSearch };
+	console.log("Benchmarking wdocs-search (N-API)...");
+	const index = new NapiIndex();
+	const startIndexing = performance.now();
+	index.addDocuments(
+		docs.map((d) => ({ fields: { title: d.title, body: d.body } })),
+	);
+	index.buildIndex();
+	const endIndexing = performance.now();
+	const startSearch = performance.now();
+	index.search(searchTerm);
+	const endSearch = performance.now();
+	return {
+		indexing: endIndexing - startIndexing,
+		search: endSearch - startSearch,
+	};
 }
 async function benchFlexSearch(docs, searchTerm) {
-    console.log('Benchmarking FlexSearch...');
-    const index = new FlexSearch.Document({
-        document: {
-            id: "id",
-            index: ["title", "body"],
-        }
-    });
-    const startIndexing = performance.now();
-    docs.forEach(doc => index.add(doc));
-    const endIndexing = performance.now();
-    const startSearch = performance.now();
-    index.search(searchTerm);
-    const endSearch = performance.now();
-    return { indexing: endIndexing - startIndexing, search: endSearch - startSearch };
+	console.log("Benchmarking FlexSearch...");
+	const index = new FlexSearch.Document({
+		document: {
+			id: "id",
+			index: ["title", "body"],
+		},
+	});
+	const startIndexing = performance.now();
+	docs.forEach((doc) => index.add(doc));
+	const endIndexing = performance.now();
+	const startSearch = performance.now();
+	index.search(searchTerm);
+	const endSearch = performance.now();
+	return {
+		indexing: endIndexing - startIndexing,
+		search: endSearch - startSearch,
+	};
 }
 async function benchLunr(docs, searchTerm) {
-    console.log('Benchmarking Lunr...');
-    const startIndexing = performance.now();
-    const idx = lunr(function () {
-        this.ref('id');
-        this.field('title');
-        this.field('body');
-        docs.forEach(function (doc) {
-            this.add(doc);
-        }, this);
-    });
-    const endIndexing = performance.now();
-    const startSearch = performance.now();
-    idx.search(searchTerm);
-    const endSearch = performance.now();
-    return { indexing: endIndexing - startIndexing, search: endSearch - startSearch };
+	console.log("Benchmarking Lunr...");
+	const startIndexing = performance.now();
+	const idx = lunr(function () {
+		this.ref("id");
+		this.field("title");
+		this.field("body");
+		docs.forEach(function (doc) {
+			this.add(doc);
+		}, this);
+	});
+	const endIndexing = performance.now();
+	const startSearch = performance.now();
+	idx.search(searchTerm);
+	const endSearch = performance.now();
+	return {
+		indexing: endIndexing - startIndexing,
+		search: endSearch - startSearch,
+	};
 }
 
 async function runNodeBenchmarks(docs, searchTerm) {
-    const results = {};
-    results['wdocs-search'] = await benchWdocsSearch(docs, searchTerm);
-    results['flexsearch'] = await benchFlexSearch(docs, searchTerm);
-    results['lunr'] = await benchLunr(docs, searchTerm);
-    console.table(results);
-    return results;
+	const results = {};
+	results["wdocs-search"] = await benchWdocsSearch(docs, searchTerm);
+	results["flexsearch"] = await benchFlexSearch(docs, searchTerm);
+	results["lunr"] = await benchLunr(docs, searchTerm);
+	console.table(results);
+	return results;
 }
 
 // --- From report.mjs ---
 async function generateReport(results) {
-    await fs.writeFile('benches/results.json', JSON.stringify(results, null, 2));
+	await fs.writeFile("benches/results.json", JSON.stringify(results, null, 2));
 
-    const htmlContent = `
+	const htmlContent = `
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -222,81 +263,83 @@ async function generateReport(results) {
         </script>
     </body>
     </html>`;
-    await fs.writeFile('benches/results.html', htmlContent);
+	await fs.writeFile("benches/results.html", htmlContent);
 }
 
 // --- Main script from run.mjs ---
-const DATASET_PATH = 'benches/dataset.json';
-const RIPGREP_TARGET_PATH = 'benches/ripgrep_target.txt';
-const SEARCH_TERM = 'rust';
+const DATASET_PATH = "benches/dataset.json";
+const RIPGREP_TARGET_PATH = "benches/ripgrep_target.txt";
+const SEARCH_TERM = "rust";
 
 async function main() {
-    try {
-        const results = {};
+	try {
+		const results = {};
 
-        console.log('--- Generating Dataset ---');
-        const docs = createDocs(10000);
-        await fs.writeFile(DATASET_PATH, JSON.stringify(docs));
-        const ripgrepContent = docs.map(d => `${d.title} ${d.body}`).join('\n');
-        await fs.writeFile(RIPGREP_TARGET_PATH, ripgrepContent);
-        console.log('Dataset generated.');
+		console.log("--- Generating Dataset ---");
+		const docs = createDocs(10000);
+		await fs.writeFile(DATASET_PATH, JSON.stringify(docs));
+		const ripgrepContent = docs.map((d) => `${d.title} ${d.body}`).join("\n");
+		await fs.writeFile(RIPGREP_TARGET_PATH, ripgrepContent);
+		console.log("Dataset generated.");
 
-        console.log('\n--- Running Rust Benchmarks (Criterion) ---');
-        try {
-            execSync('cargo bench', { stdio: 'inherit' });
-            const rustBenchDir = 'target/criterion';
-            const rustResults = {};
-            const benchmarkFolders = (await fs.readdir(rustBenchDir, { withFileTypes: true }))
-                .filter(dirent => dirent.isDirectory())
-                .map(dirent => dirent.name);
+		console.log("\n--- Running Rust Benchmarks (Criterion) ---");
+		try {
+			execSync("cargo bench", { stdio: "inherit" });
+			const rustBenchDir = "target/criterion";
+			const rustResults = {};
+			const benchmarkFolders = (
+				await fs.readdir(rustBenchDir, { withFileTypes: true })
+			)
+				.filter((dirent) => dirent.isDirectory())
+				.map((dirent) => dirent.name);
 
-            for (const folder of benchmarkFolders) {
-                const rawJsonPath = `${rustBenchDir}/${folder}/new/raw.json`;
-                try {
-                    const rawJsonl = await fs.readFile(rawJsonPath, 'utf-8');
-                    for (const line of rawJsonl.trim().split('\n')) {
-                        const data = JSON.parse(line);
-                        if (data.reason === 'benchmark-complete') {
-                            const benchName = data.id.id;
-                            const meanTimeNs = data.mean.estimate;
-                            const meanTimeMs = meanTimeNs / 1_000_000;
-                            const [lib, key] = benchName.split(':').map(s => s.trim());
-                            if (!rustResults[lib]) rustResults[lib] = {};
-                            rustResults[lib][key] = meanTimeMs;
-                        }
-                    }
-                } catch (e) {
-                    if (e.code !== 'ENOENT') {
-                        console.warn(`Could not read or parse ${rawJsonPath}:`, e);
-                    }
-                }
-            }
-            results.rust = rustResults;
-            console.log('Rust benchmark results:', results.rust);
-        } catch (e) {
-            console.error('Failed to run or parse Rust benchmarks:', e);
-            results.rust = {};
-        }
+			for (const folder of benchmarkFolders) {
+				const rawJsonPath = `${rustBenchDir}/${folder}/new/raw.json`;
+				try {
+					const rawJsonl = await fs.readFile(rawJsonPath, "utf-8");
+					for (const line of rawJsonl.trim().split("\n")) {
+						const data = JSON.parse(line);
+						if (data.reason === "benchmark-complete") {
+							const benchName = data.id.id;
+							const meanTimeNs = data.mean.estimate;
+							const meanTimeMs = meanTimeNs / 1_000_000;
+							const [lib, key] = benchName.split(":").map((s) => s.trim());
+							if (!rustResults[lib]) rustResults[lib] = {};
+							rustResults[lib][key] = meanTimeMs;
+						}
+					}
+				} catch (e) {
+					if (e.code !== "ENOENT") {
+						console.warn(`Could not read or parse ${rawJsonPath}:`, e);
+					}
+				}
+			}
+			results.rust = rustResults;
+			console.log("Rust benchmark results:", results.rust);
+		} catch (e) {
+			console.error("Failed to run or parse Rust benchmarks:", e);
+			results.rust = {};
+		}
 
-        console.log('\n--- Running Node.js Benchmarks ---');
-        results.node = await runNodeBenchmarks(docs, SEARCH_TERM);
+		console.log("\n--- Running Node.js Benchmarks ---");
+		results.node = await runNodeBenchmarks(docs, SEARCH_TERM);
 
-        console.log('\n--- Running Ripgrep Benchmark ---');
-        const startRg = performance.now();
-        execSync(`rg -c ${SEARCH_TERM} ${RIPGREP_TARGET_PATH}`);
-        const endRg = performance.now();
-        results.ripgrep = { search: endRg - startRg };
-        console.log(`Ripgrep search took ${results.ripgrep.search.toFixed(2)}ms`);
+		console.log("\n--- Running Ripgrep Benchmark ---");
+		const startRg = performance.now();
+		execSync(`rg -c ${SEARCH_TERM} ${RIPGREP_TARGET_PATH}`);
+		const endRg = performance.now();
+		results.ripgrep = { search: endRg - startRg };
+		console.log(`Ripgrep search took ${results.ripgrep.search.toFixed(2)}ms`);
 
-        console.log('\n--- Generating HTML Report ---');
-        await generateReport(results);
-        console.log('Report generated at benches/results.html');
+		console.log("\n--- Generating HTML Report ---");
+		await generateReport(results);
+		console.log("Report generated at benches/results.html");
 
-        await fs.unlink(DATASET_PATH);
-        await fs.unlink(RIPGREP_TARGET_PATH);
-    } catch (e) {
-        console.error('Benchmark script failed:', e);
-    }
+		await fs.unlink(DATASET_PATH);
+		await fs.unlink(RIPGREP_TARGET_PATH);
+	} catch (e) {
+		console.error("Benchmark script failed:", e);
+	}
 }
 
 main().catch(console.error);

@@ -20,8 +20,8 @@ This is an introduction to the project. You can find more details in the [offici
 
 Here is a sample table:
 
-| Header 1 | Header 2 | Header 3 |
-| :--- | :---: | ---: |
+| Header 1     |   Header 2   |     Header 3 |
+| :----------- | :----------: | -----------: |
 | Row 1, Col 1 | Row 1, Col 2 | Row 1, Col 3 |
 | Row 2, Col 1 | Row 2, Col 2 | Row 2, Col 3 |
 | Row 3, Col 1 | Row 3, Col 2 | Row 3, Col 3 |
@@ -33,10 +33,10 @@ You can include code blocks with syntax highlighting.
 ```typescript
 // TypeScript example
 function greet(name: string): string {
-  return `Hello, ${name}!`;
+	return `Hello, ${name}!`;
 }
 
-console.log(greet('World'));
+console.log(greet("World"));
 ```
 
 ```bash

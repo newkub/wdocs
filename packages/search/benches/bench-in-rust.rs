@@ -1,22 +1,21 @@
-
-use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use meilisearch_sdk::client::*;
 use meilisearch_sdk::document::*;
 use meilisearch_sdk::search::*;
-use std::process::{Child, Command};
-use std::time::Duration;
-use tokio::runtime::Runtime;
-use tokio::time::sleep;
-use serde::{Serialize, Deserialize};
-use std::hint::black_box;
 use search::app::index::Index;
 use search::types::document::Document;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use std::hint::black_box;
+use std::process::{Child, Command};
+use std::time::Duration;
 use tantivy::collector::TopDocs;
 use tantivy::query::QueryParser;
 use tantivy::schema::{Schema, STORED, TEXT};
 use tantivy::{doc, Index as TantivyIndex};
+use tokio::runtime::Runtime;
+use tokio::time::sleep;
 
 fn load_dataset() -> Vec<Document> {
     let data = fs::read_to_string("benches/dataset.json").expect("Failed to read dataset");
@@ -99,7 +98,6 @@ fn tantivy_benchmark(c: &mut Criterion) {
         });
     });
 
-
     group.bench_function("tantivy: indexing", |b| {
         b.iter(|| {
             let index = TantivyIndex::create_in_ram(schema.clone());
@@ -144,14 +142,29 @@ fn tantivy_benchmark(c: &mut Criterion) {
 fn tokenizer_benchmark(c: &mut Criterion) {
     let docs = load_dataset();
     let tokenizer = search::components::tokenizer::Tokenizer::new();
-    let text_to_tokenize: String = docs.iter().map(|d| d.fields.values().cloned().collect::<Vec<String>>().join(" ")).collect::<Vec<String>>().join(" ");
+    let text_to_tokenize: String = docs
+        .iter()
+        .map(|d| {
+            d.fields
+                .values()
+                .cloned()
+                .collect::<Vec<String>>()
+                .join(" ")
+        })
+        .collect::<Vec<String>>()
+        .join(" ");
 
     c.bench_function("wdocs-search: tokenizer", |b| {
         b.iter(|| tokenizer.tokenize(black_box(&text_to_tokenize)))
     });
 }
 
-criterion_group!(benches, wdocs_search_benchmark, tantivy_benchmark, tokenizer_benchmark);
+criterion_group!(
+    benches,
+    wdocs_search_benchmark,
+    tantivy_benchmark,
+    tokenizer_benchmark
+);
 fn meilisearch_benchmark(c: &mut Criterion) {
     // Start Meilisearch instance
     let mut meili_server = Command::new("./benches/bin/meilisearch.exe")
@@ -174,13 +187,21 @@ fn meilisearch_benchmark(c: &mut Criterion) {
         group.bench_function("indexing", |b| {
             b.to_async(&rt).iter(|| async {
                 let task = index.add_documents(&docs, Some("id")).await.unwrap();
-                index.wait_for_task(task.task_uid, None, None).await.unwrap();
+                index
+                    .wait_for_task(task.task_uid, None, None)
+                    .await
+                    .unwrap();
             });
         });
 
         group.bench_function("search", |b| {
             b.to_async(&rt).iter(|| async {
-                index.search().with_query("rust").execute::<MeiliDocument>().await.unwrap();
+                index
+                    .search()
+                    .with_query("rust")
+                    .execute::<MeiliDocument>()
+                    .await
+                    .unwrap();
             });
         });
 
@@ -207,11 +228,13 @@ impl Document for MeiliDocument {
 fn load_dataset_for_meili() -> Vec<MeiliDocument> {
     let json_str = fs::read_to_string("benches/dataset.json").expect("Failed to read dataset");
     let docs: Vec<Document> = serde_json::from_str(&json_str).expect("Failed to parse dataset");
-    docs.into_iter().map(|d| MeiliDocument {
-        id: d.id,
-        title: d.fields.get("title").cloned().unwrap_or_default(),
-        body: d.fields.get("body").cloned().unwrap_or_default(),
-    }).collect()
+    docs.into_iter()
+        .map(|d| MeiliDocument {
+            id: d.id,
+            title: d.fields.get("title").cloned().unwrap_or_default(),
+            body: d.fields.get("body").cloned().unwrap_or_default(),
+        })
+        .collect()
 }
 
 criterion_main!(benches, meilisearch_benchmark);

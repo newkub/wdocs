@@ -9,9 +9,7 @@ use rustc_hash::FxHashMap;
 
 pub mod app;
 pub mod components;
-pub mod error;
 pub mod types;
-
 
 #[napi(object)]
 #[derive(Debug, Clone)]
@@ -41,15 +39,17 @@ impl NapiIndex {
     }
 
     #[napi]
-    pub fn add_documents(&mut self, docs: Vec<JsDocument>) {
+    pub fn add_documents(&mut self, docs: Vec<JsDocument>) -> napi::Result<()> {
         let documents = docs
             .into_iter()
             .map(|doc| Document {
-                id: 0, // The Rust Index will assign the ID
+                id: 0,
                 fields: doc.fields,
             })
             .collect();
-        self.index.add_documents(documents);
+        self.index
+            .add_documents(documents)
+            .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e))
     }
 
     #[napi]
@@ -58,16 +58,17 @@ impl NapiIndex {
     }
 
     #[napi]
-    pub fn search_ids(&self, query: String) -> Vec<u32> {
-        self.index.search_ids(&query).iter().collect()
+    pub fn search_ids(&self, query: String) -> napi::Result<Vec<u32>> {
+        Ok(self.index.search_ids(&query).iter().collect())
     }
 
     #[napi]
-    pub fn search(&self, query: String) -> Vec<JsDocument> {
-        self.index
+    pub fn search(&self, query: String) -> napi::Result<Vec<JsDocument>> {
+        Ok(self
+            .index
             .search(&query)
             .into_iter()
             .map(|doc| JsDocument { fields: doc.fields })
-            .collect()
+            .collect())
     }
 }

@@ -7,10 +7,15 @@ icon: mdi:markdown
 This guide provides a comprehensive overview of all the Markdown syntax supported.
 
 # Heading 1
+
 ## Heading 2
+
 ### Heading 3
+
 #### Heading 4
+
 ##### Heading 5
+
 ###### Heading 6
 
 ## Paragraphs
@@ -23,9 +28,9 @@ This is another paragraph. Cras elementum ultrices diam. Maecenas ligula massa, 
 
 **Bold text**
 
-*Italic text*
+_Italic text_
 
-***Bold and italic text***
+_**Bold and italic text**_
 
 ~~Strikethrough text~~
 
@@ -35,7 +40,7 @@ This is another paragraph. Cras elementum ultrices diam. Maecenas ligula massa, 
 
 > This is a blockquote.
 >
-> > This is a nested blockquote.
+>> This is a nested blockquote.
 
 ## Lists
 
@@ -60,10 +65,10 @@ This is another paragraph. Cras elementum ultrices diam. Maecenas ligula massa, 
 ```javascript
 // Javascript code block
 function greet(name) {
-  console.log(`Hello, ${name}!`);
+	console.log(`Hello, ${name}!`);
 }
 
-greet('World');
+greet("World");
 ```
 
 ```python
@@ -78,14 +83,13 @@ hello()
 
 ---
 
-***
+---
 
-___
-
+---
 
 ## Links
 
-[Visit our documentation](/) 
+[Visit our documentation](/)
 
 [Visit Google](https://www.google.com)
 
@@ -95,11 +99,11 @@ ___
 
 ## Tables
 
-| Header 1 | Header 2 | Header 3 |
-| :--- | :---: | ---: |
+| Header 1   |   Header 2   |    Header 3 |
+| :--------- | :----------: | ----------: |
 | Align Left | Align Center | Align Right |
-| Cell 1 | Cell 2 | Cell 3 |
-| Cell 4 | Cell 5 | Cell 6 |
+| Cell 1     |    Cell 2    |      Cell 3 |
+| Cell 4     |    Cell 5    |      Cell 6 |
 
 ## Task Lists
 

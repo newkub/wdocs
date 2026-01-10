@@ -44,9 +44,9 @@ pnpm add wdocs
 
 After installation, you'll need to create a `wdocs.config.ts` file in your project root. Here is a basic configuration to get you started:
 
-| Option      | Type     | Description                          |
-| :---------- | :------- | :----------------------------------- |
-| `title`     | `string` | The title of your documentation site.|
-| `description` | `string` | A short description for SEO purposes.|
+| Option        | Type     | Description                           |
+| :------------ | :------- | :------------------------------------ |
+| `title`       | `string` | The title of your documentation site. |
+| `description` | `string` | A short description for SEO purposes. |
 
 > **Note:** For a full list of configuration options, please refer to the [Configuration Guide](/guide/configuration).

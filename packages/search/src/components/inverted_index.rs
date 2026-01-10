@@ -22,7 +22,7 @@ impl InvertedIndex {
         }
     }
 
-        /// Retrieves the postings list for a given term.
+    /// Retrieves the postings list for a given term.
     pub fn get_postings(&self, term: &str) -> Option<&RoaringBitmap> {
         self.term_dictionary
             .get(term)

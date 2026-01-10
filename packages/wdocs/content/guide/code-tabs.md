@@ -11,17 +11,17 @@ You can use the `CodeTabs` and `CodeTab` components to display code snippets in 
   <ContentCodeTab label="JavaScript">
 
 ```javascript
-console.log('Hello, JavaScript!')
+console.log("Hello, JavaScript!");
 ```
 
-  </ContentCodeTab>
+</ContentCodeTab>
   <ContentCodeTab label="TypeScript">
 
 ```typescript
-console.log('Hello, TypeScript!')
+console.log("Hello, TypeScript!");
 ```
 
-  </ContentCodeTab>
+</ContentCodeTab>
   <ContentCodeTab label="Rust">
 
 ```rust
@@ -30,5 +30,5 @@ fn main() {
 }
 ```
 
-  </ContentCodeTab>
+</ContentCodeTab>
 </ContentCodeTabs>

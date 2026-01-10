@@ -42,7 +42,7 @@ async function runJSBenchmarks() {
 		.use(markdownItSub)
 		.use(markdownItSup)
 		.use(markdownItTaskLists)
-		.use(markdownItEmoji);
+		.use(markdownItEmoji.full);
 	const remarkable = new Remarkable();
 	const showdownConverter = new showdown.Converter();
 
@@ -74,9 +74,17 @@ async function runJSBenchmarks() {
 			if (!simulationData[task.name]) {
 				simulationData[task.name] = [];
 			}
+			let ops = 0;
+			if (task.result && task.result.hz) {
+				ops = parseFloat(task.result.hz.toFixed(2));
+			} else {
+				console.warn(
+					`[!] Benchmark task '${task.name}' completed without a valid result. Error: ${task.error}`,
+				);
+			}
 			simulationData[task.name].push({
 				sizeKB: parseFloat(sampleSizeKB),
-				ops: parseFloat(task.result.hz.toFixed(2)),
+				ops,
 			});
 		});
 	}

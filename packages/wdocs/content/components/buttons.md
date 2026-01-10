@@ -16,9 +16,9 @@ This is the main call-to-action button.
 
 ```vue
 <template>
-  <button class="px-4 py-2 font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600">
-    Primary Button
-  </button>
+	<button class="px-4 py-2 font-semibold text-white bg-blue-500 rounded-md hover:bg-blue-600">
+		Primary Button
+	</button>
 </template>
 ```
 
@@ -28,9 +28,9 @@ Use this for actions that are important but not the primary focus.
 
 ```vue
 <template>
-  <button class="px-4 py-2 font-semibold text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
-    Secondary Button
-  </button>
+	<button class="px-4 py-2 font-semibold text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+		Secondary Button
+	</button>
 </template>
 ```
 
@@ -40,8 +40,8 @@ This button indicates a destructive action.
 
 ```vue
 <template>
-  <button class="px-4 py-2 font-semibold text-white bg-red-500 rounded-md hover:bg-red-600">
-    Danger Button
-  </button>
+	<button class="px-4 py-2 font-semibold text-white bg-red-500 rounded-md hover:bg-red-600">
+		Danger Button
+	</button>
 </template>
 ```

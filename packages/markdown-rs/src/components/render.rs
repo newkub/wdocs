@@ -20,41 +20,13 @@ pub fn render_to_html_string(input: &str, flags: RenderFlags) -> String {
         let plugin = crate::components::plugins::toc::TocPlugin;
         stream = plugin.process(stream);
     }
-    // if flags.directives {
-    //     // let plugin = crate::components::plugins::directive::DirectivePlugin;
-    //     // stream = plugin.process(stream);
-    // }
+
     if flags.syntax_highlight {
         let plugin = crate::components::plugins::syntax_highlighting::SyntaxHighlightingPlugin;
         stream = plugin.process(stream);
     }
-    // if flags.spoiler {
-    //     // let plugin = crate::components::plugins::spoiler::SpoilerPlugin;
-    //     // stream = plugin.process(stream);
-    // }
-    // if flags.linkify {
-    //     // let plugin = crate::components::plugins::linkify::LinkifyPlugin;
-    //     // stream = plugin.process(stream);
-    // }
-    // if flags.smart_punctuation {
-    //     // let plugin = crate::components::plugins::typographer::TypographerPlugin;
-    //     // stream = plugin.process(stream);
-    // }
-    // if flags.admonitions {
-    //     // let plugin = crate::components::plugins::admonition::AdmonitionPlugin;
-    //     // stream = plugin.process(stream);
-    // }
-    // if flags.attributes {
-    //     // let plugin = crate::components::plugins::attributes::AttributesPlugin;
-    //     // stream = plugin.process(stream);
-    // }
-    // if flags.math {
-    //     // let plugin = crate::components::plugins::math::MathPlugin;
-    //     // stream = plugin.process(stream);
-    // }
 
     html::push_html(&mut html_output, stream);
-
 
     html_output
 }

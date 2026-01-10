@@ -23,10 +23,10 @@
     "check:modules": "bunx node-modules-inspector"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.10",
+    "@biomejs/biome": "^2.3.11",
     "lefthook": "^2.0.13",
     "taze": "^19.9.2",
-    "turbo": "^2.7.2",
+    "turbo": "^2.7.3",
     "typescript": "^5.9.3"
   }
 }

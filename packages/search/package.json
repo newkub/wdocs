@@ -1,37 +1,37 @@
 {
-  "name": "search",
-  "type": "module",
-  "main": "index.cjs",
-  "napi": {
-    "name": "search",
-    "outputFormat": "esm",
-    "triples": {}
-  },
-  "scripts": {
-    "dev": "napi watch",
-    "build": "napi build --platform --release",
-    "postbuild": "node scripts/postbuild.mjs",
-    "test": "cargo test",
-    "bench": "bun run build && bun benches/bench.mjs",
-    "lint": "bun run lint:rust && bun run lint:js",
-    "lint:rust": "cargo clippy -- -D warnings",
-    "lint:js": "biome lint .",
-    "format": "bun run format:rust && bun run format:js",
-    "format:rust": "cargo fmt",
-    "format:js": "biome format . --write",
-    "verify": "tsc --noEmit",
-    "start-meili": "./benches/bin/meilisearch --master-key=masterKey"
-  },
-  "devDependencies": {
-    "@napi-rs/cli": "^3.5.1",
-    "bun-types": "latest",
-    "chart.js": "^4.5.1",
-    "flexsearch": "^0.8.212",
-    "meilisearch": "^0.54.0",
-    "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "lunr": "^2.3.9",
-    "minisearch": "^7.2.0"
-  }
+	"name": "search",
+	"type": "module",
+	"main": "index.cjs",
+	"napi": {
+		"name": "search",
+		"outputFormat": "esm",
+		"triples": {}
+	},
+	"scripts": {
+		"dev": "napi watch",
+		"build": "napi build --platform --release",
+		"postbuild": "node scripts/postbuild.mjs",
+		"test": "cargo test",
+		"bench": "bun run build && bun benches/bench.mjs",
+		"lint": "bun run lint:rust && bun run lint:js",
+		"lint:rust": "cargo clippy -- -D warnings",
+		"lint:js": "biome lint .",
+		"format": "bun run format:rust && bun run format:js",
+		"format:rust": "cargo fmt",
+		"format:js": "biome format . --write",
+		"verify": "tsc --noEmit",
+		"start-meili": "./benches/bin/meilisearch --master-key=masterKey"
+	},
+	"devDependencies": {
+		"@napi-rs/cli": "^3.5.1",
+		"bun-types": "latest",
+		"chart.js": "^4.5.1",
+		"flexsearch": "^0.8.212",
+		"meilisearch": "^0.54.0",
+		"typescript": "^5.9.3"
+	},
+	"dependencies": {
+		"lunr": "^2.3.9",
+		"minisearch": "^7.2.0"
+	}
 }

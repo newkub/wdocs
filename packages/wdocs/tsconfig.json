@@ -1,17 +1,10 @@
 {
-  "extends": "./.nuxt/tsconfig.json",
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "~/shared/*": [
-        "./shared/*"
-      ],
-      "~/server/*": [
-        "./server/*"
-      ]
-    }
-  },
-  "include": [
-    "./types/**/*.d.ts"
-  ]
+	"extends": "./.nuxt/tsconfig.json",
+	"compilerOptions": {
+		"paths": {
+			"~/shared/*": ["./shared/*"],
+			"~/server/*": ["./server/*"]
+		}
+	},
+	"include": ["./types/**/*.d.ts"]
 }

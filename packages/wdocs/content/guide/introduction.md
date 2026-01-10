@@ -21,7 +21,7 @@ WDocs is a documentation system built on top of Nuxt, offering a VitePress-like 
 
 If you get stuck, here are some resources that can help you:
 
-*   **Community Discord:** Join our community on Discord to ask questions and get help.
-*   **GitHub Discussions:** Use GitHub Discussions for longer-form questions and feature requests.
+- **Community Discord:** Join our community on Discord to ask questions and get help.
+- **GitHub Discussions:** Use GitHub Discussions for longer-form questions and feature requests.
 
 Ready to get started? Head over to the [Installation](/guide/installation) guide.

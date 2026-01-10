@@ -1,0 +1,43 @@
+{
+  "name": "@wdocs/content",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/module.ts",
+  "types": "./src/module.ts",
+  "exports": {
+    ".": {
+      "types": "./src/module.ts",
+      "import": "./src/module.ts"
+    },
+    "./runtime/*": "./runtime/*"
+  },
+  "scripts": {
+    "dev": "tsdown --watch",
+    "build": "tsdown"
+  },
+  "dependencies": {
+    "@nuxt/kit": "^4.2.2",
+    "@shikijs/markdown-it": "^3.21.0",
+    "gray-matter": "^4.0.3",
+    "markdown-it": "^14.1.0",
+    "markdown-it-anchor": "^9.2.0",
+    "markdown-it-container": "^4.0.0",
+    "markdown-it-include": "^2.0.0",
+    "markdown-it-mermaid": "^0.2.5",
+    "markdown-rs": "workspace:*",
+    "search": "workspace:*",
+    "shiki": "^3.21.0",
+    "simple-git": "^3.30.0",
+    "zod": "^4.3.5"
+  },
+  "peerDependencies": {
+    "nuxt": "^4.2.2"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@types/markdown-it-anchor": "^4.0.4",
+    "@types/node": "^25.0.6",
+    "@types/bun": "latest",
+    "typescript": "^5.9.3"
+  }
+}

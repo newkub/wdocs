@@ -1,5 +1,5 @@
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 const { parse, renderGfm, renderWithOptions } = require("./markdown-rs.node");
 
-module.exports.parse = parse;
-module.exports.renderGfm = renderGfm;
-module.exports.renderWithOptions = renderWithOptions;
+export { parse, renderGfm, renderWithOptions };
